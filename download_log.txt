@@ -1,0 +1,57 @@
+============================================================
+NFL Data Downloader
+Downloading nflverse data: 1999-2024
+============================================================
+  Downloading 1999...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2000...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2001...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2002...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2003...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2004...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2005...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2006...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2007...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2008...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2009...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2010...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2011...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2012...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2013...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2014...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2015...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2016...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2017...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2018...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2019...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2020...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2021...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2022...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2023...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+  Downloading 2024...     Error: Cannot convert numpy.ndarray to numpy.ndarray
+✗ Failed
+ERROR: No data downloaded!
