@@ -25,7 +25,7 @@ from data.image_fetcher import (
 from config import STAT_QUALIFIERS
 
 # American football icon URL for qualifier-based rows
-FOOTBALL_ICON_URL = "https://cdn-icons-png.flaticon.com/512/1099/1099680.png"
+FOOTBALL_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/1/16/American_football.svg"
 from game.puzzle_generator import get_daily_puzzle, format_criteria_display, format_qualifier_display
 from game.validator import validate_player_submission, find_player_best_year, search_players
 from game.scorer import score_submission, get_top_5_for_criteria, calculate_total_score, generate_share_text
