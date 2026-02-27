@@ -236,11 +236,18 @@ def validate_player_submission(
         if criteria['conference'] not in team_division:
             return False, None, f"{player_name}'s team was not in {criteria['conference']} in {year}"
     
-    # Check stat qualifier
+    # Check stat qualifier and get qualifier value
+    qualifier_value = None
     if criteria.get('qualifier'):
         is_valid, error_msg = validate_qualifier(df, player_row, criteria['qualifier'], year)
         if not is_valid:
             return False, None, error_msg
+        
+        # Get the qualifier value for display
+        qualifier_info = STAT_QUALIFIERS.get(criteria['qualifier'], {})
+        qualifier_column = qualifier_info.get('column')
+        if qualifier_column and qualifier_column in player_row:
+            qualifier_value = player_row.get(qualifier_column)
     
     # Build player data response
     player_data = {
@@ -251,6 +258,7 @@ def validate_player_submission(
         'stat_value': float(stat_value),
         'player_id': player_row.get('player_id'),
         'espn_id': player_row.get('espn_id'),
+        'qualifier_value': qualifier_value,
     }
     
     return True, player_data, ""

@@ -22,6 +22,10 @@ from data.image_fetcher import (
     get_division_team_logos, get_conference_logo_url, DIVISION_TEAMS,
     NFL_LOGO_URL, AFC_LOGO_URL, NFC_LOGO_URL
 )
+from config import STAT_QUALIFIERS
+
+# Football icon URL for qualifier-based rows
+FOOTBALL_ICON_URL = "https://upload.wikimedia.org/wikipedia/en/a/a2/American_Football_1.svg"
 from game.puzzle_generator import get_daily_puzzle, format_criteria_display, format_qualifier_display
 from game.validator import validate_player_submission, find_player_best_year, search_players
 from game.scorer import score_submission, get_top_5_for_criteria, calculate_total_score, generate_share_text
@@ -498,11 +502,12 @@ def render_stats_header():
 def get_logo_info_for_criteria(criteria: dict) -> dict:
     """
     Determine what logo(s) to show based on criteria.
-    Returns dict with 'type' (single, division, conference, league) and 'urls' list
+    Returns dict with 'type' (single, division, conference, league, qualifier) and 'urls' list
     """
     team_abbr = criteria.get('team')
     division = criteria.get('division')
     conference = criteria.get('conference')
+    qualifier = criteria.get('qualifier')
     
     if team_abbr:
         return {'type': 'single', 'urls': [get_team_logo_url(team_abbr)]}
@@ -519,6 +524,9 @@ def get_logo_info_for_criteria(criteria: dict) -> dict:
             return {'type': 'conference', 'urls': [NFC_LOGO_URL], 'name': 'NFC'}
         else:
             return {'type': 'single', 'urls': [NFL_LOGO_URL]}
+    elif qualifier:
+        # Qualifier-only row - show football icon
+        return {'type': 'qualifier', 'urls': [FOOTBALL_ICON_URL]}
     else:
         return {'type': 'league', 'urls': [NFL_LOGO_URL]}
 
@@ -544,7 +552,7 @@ def render_game_row(row_index: int):
 
 
 def render_completed_row(row_index: int, submission: dict, score_data: dict, criteria: dict, logo_url: str):
-    """Render a completed row with player info and tier styling"""
+    """Render a completed row with player info, tier styling, and criteria display"""
     try:
         tier = score_data.get('tier', 'iron') if score_data else 'iron'
         tier_color = TIER_COLORS.get(tier, '#374151')
@@ -555,13 +563,19 @@ def render_completed_row(row_index: int, submission: dict, score_data: dict, cri
         player_name = submission.get('player', 'Unknown') if submission else 'Unknown'
         season = submission.get('season', '') if submission else ''
         team = submission.get('team', 'N/A') if submission else 'N/A'
+        
+        # Get criteria display text
+        criteria_text = format_criteria_display(criteria)
+        qualifier_key = criteria.get('qualifier')
+        qualifier_value = submission.get('qualifier_value') if submission else None
 
-        # Mobile-friendly completed row card
+        # Mobile-friendly completed row card with criteria shown
         st.markdown(f"""
         <div class="completed-card" style="
             background: linear-gradient(90deg, {tier_color}33 0%, {tier_color}11 50%, transparent 100%);
             border-left: 4px solid {tier_color};
         ">
+            <div style="font-size: 0.7rem; color: #888; margin-bottom: 4px;">{criteria_text}</div>
             <div class="completed-card-content">
                 <div class="player-info-compact">
                     <span style="font-size: 1.2rem;">{tier_emoji}</span>
@@ -576,6 +590,17 @@ def render_completed_row(row_index: int, submission: dict, score_data: dict, cri
             </div>
         </div>
         """, unsafe_allow_html=True)
+        
+        # Show qualifier value if applicable
+        if qualifier_key and qualifier_value is not None:
+            qualifier_info = STAT_QUALIFIERS.get(qualifier_key, {})
+            qualifier_display = qualifier_info.get('display', qualifier_key)
+            qualifier_column = qualifier_info.get('column', '')
+            st.markdown(f"""
+            <div style="font-size: 0.7rem; color: #4ade80; margin-top: -5px; margin-bottom: 8px; padding-left: 10px;">
+                ✓ {qualifier_display}: {qualifier_value:,.0f} {qualifier_column.replace('_', ' ')}
+            </div>
+            """, unsafe_allow_html=True)
 
         # Expandable details - with error handling
         try:
@@ -594,6 +619,12 @@ def render_completed_row(row_index: int, submission: dict, score_data: dict, cri
                 
                 st.markdown(f"**{player_name}** • {season} • {team}")
                 st.markdown(f"**Score:** {score:,.0f} pts ({percentile:.0f}th percentile)")
+                
+                # Show qualifier details if applicable
+                if qualifier_key and qualifier_value is not None:
+                    qualifier_info = STAT_QUALIFIERS.get(qualifier_key, {})
+                    qualifier_display = qualifier_info.get('display', qualifier_key)
+                    st.markdown(f"**Qualifier:** {qualifier_display} → {qualifier_value:,.0f}")
                 
                 # Top 5 leaderboard
                 st.markdown("---")
