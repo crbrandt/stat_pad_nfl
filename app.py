@@ -464,12 +464,22 @@ def init_session_state():
 
 
 def render_header():
-    """Render the game header"""
-    st.markdown(f"""
-    <div class="game-header">
-        <h1 class="game-title">🏈 {GAME_NAME}</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    """Render the game header with Easy Mode toggle"""
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.markdown(f"""
+        <div class="game-header" style="border-bottom: none; padding-bottom: 0;">
+            <h1 class="game-title">🏈 {GAME_NAME}</h1>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)  # Spacer
+        easy_mode = st.checkbox("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_header")
+        if easy_mode != st.session_state.easy_mode:
+            st.session_state.easy_mode = easy_mode
+            st.rerun()
 
 
 def render_stats_header():
@@ -693,14 +703,6 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
     
     st.markdown(f"""<div class="row-card"><div class="row-header">{logo_html}<div class="row-info"><div class="row-years">{year_display}</div><div class="row-criteria">{criteria_text}</div></div></div></div>""", unsafe_allow_html=True)
     
-    # Show qualifier if present
-    if qualifier_display:
-        st.markdown(f"""
-        <div class="qualifier-box">
-            {qualifier_display.replace(chr(10), '<br>')}
-        </div>
-        """, unsafe_allow_html=True)
-    
     # Player input - full width for mobile
     all_players = get_all_player_names()
     
@@ -774,24 +776,20 @@ def submit_player(row_index: int, player_name: str, year: int = None):
 
 
 def render_footer():
-    """Render footer with Easy Mode toggle and How to Play"""
+    """Render footer with How to Play and Share buttons"""
     st.markdown("---")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        easy_mode = st.checkbox("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
-        if easy_mode != st.session_state.easy_mode:
-            st.session_state.easy_mode = easy_mode
-    
-    with col2:
         if st.button("❓ How to Play", use_container_width=True):
             st.session_state.show_how_to_play = True
     
-    # Share button if game is complete
-    if all(s is not None for s in st.session_state.submissions):
-        if st.button("📤 Share Score", type="primary", use_container_width=True):
-            share_score()
+    with col2:
+        # Share button if game is complete
+        if all(s is not None for s in st.session_state.submissions):
+            if st.button("📤 Share Score", type="primary", use_container_width=True):
+                share_score()
 
 
 def share_score():
