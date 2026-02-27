@@ -14,7 +14,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     STAT_CATEGORIES, NFL_TEAMS, DIVISIONS, CONFERENCES,
     POSITION_GROUPS, CRITERIA_TYPES, MIN_VALID_ANSWERS,
-    TIMEZONE, RESET_HOUR, SUPER_BOWL_ERA_START, CURRENT_YEAR
+    TIMEZONE, RESET_HOUR, SUPER_BOWL_ERA_START, CURRENT_YEAR,
+    STAT_QUALIFIERS, get_compatible_qualifiers
 )
 
 
@@ -25,19 +26,10 @@ def get_puzzle_date() -> date:
 
 
 def get_date_seed(puzzle_date: Optional[date] = None) -> int:
-    """
-    Generate a deterministic seed from a date
-    
-    Args:
-        puzzle_date: Date to generate seed for. Defaults to today.
-        
-    Returns:
-        Integer seed for random number generator
-    """
+    """Generate a deterministic seed from a date"""
     if puzzle_date is None:
         puzzle_date = get_puzzle_date()
     
-    # Create a hash from the date string
     date_str = puzzle_date.isoformat()
     hash_obj = hashlib.md5(date_str.encode())
     seed = int(hash_obj.hexdigest()[:8], 16)
@@ -45,25 +37,13 @@ def get_date_seed(puzzle_date: Optional[date] = None) -> int:
 
 
 def generate_year_range(rng: random.Random, stat_type: str) -> Tuple[int, int]:
-    """
-    Generate a random year range for criteria
-    
-    Args:
-        rng: Random number generator
-        stat_type: Type of stat (affects year range)
-        
-    Returns:
-        Tuple of (start_year, end_year)
-    """
-    # Different range sizes for variety
+    """Generate a random year range for criteria"""
     range_sizes = [5, 10, 15, 20]
     range_size = rng.choice(range_sizes)
     
-    # Ensure we have enough data (nfl_data_py starts around 1999)
     min_year = 1999
     max_year = CURRENT_YEAR
     
-    # Random start year
     start_year = rng.randint(min_year, max_year - range_size)
     end_year = start_year + range_size
     
@@ -76,7 +56,9 @@ def generate_criteria(
     stat_info: Dict,
     used_teams: set,
     used_positions: set,
-    row_index: int
+    used_qualifiers: set,
+    row_index: int,
+    force_type: Optional[str] = None
 ) -> Dict:
     """
     Generate criteria for a single row
@@ -87,16 +69,11 @@ def generate_criteria(
         stat_info: Info about the stat category
         used_teams: Set of already used teams
         used_positions: Set of already used positions
+        used_qualifiers: Set of already used qualifiers
         row_index: Index of the current row (0-4)
-        
-    Returns:
-        Dictionary with criteria for the row
+        force_type: Force a specific criteria type ('team_based' or 'qualifier')
     """
     eligible_positions = stat_info['eligible_positions']
-    
-    # Determine criteria type based on row index for variety
-    # First row: usually just team + year
-    # Later rows: more complex criteria
     
     criteria = {
         'team': None,
@@ -106,7 +83,8 @@ def generate_criteria(
         'division': None,
         'conference': None,
         'qualifier': None,
-        'qualifier_type': None,  # 'same_season' or 'career'
+        'qualifier_type': None,
+        'qualifier_display': None,
     }
     
     # Always have a year range
@@ -114,82 +92,87 @@ def generate_criteria(
     criteria['year_start'] = year_start
     criteria['year_end'] = year_end
     
-    # Decide what additional criteria to add
-    criteria_options = []
+    # Get compatible qualifiers for this stat category
+    compatible_qualifiers = get_compatible_qualifiers(stat_category)
+    available_qualifiers = [q for q in compatible_qualifiers if q not in used_qualifiers]
     
-    # Team criteria (if not all teams used)
-    available_teams = [t for t in NFL_TEAMS.keys() if t not in used_teams]
-    if available_teams:
-        criteria_options.append('team')
+    # Determine if this row should use a stat qualifier or team-based criteria
+    use_qualifier = False
     
-    # Position criteria (only if compatible with stat)
-    available_positions = [p for p in eligible_positions if p not in used_positions]
-    if available_positions and len(eligible_positions) > 1:
-        criteria_options.append('position')
+    if force_type == 'qualifier':
+        use_qualifier = True
+    elif force_type == 'team_based':
+        use_qualifier = False
+    else:
+        # Default logic: rows 2-4 have 40% chance of using a qualifier
+        if row_index >= 1 and available_qualifiers and rng.random() < 0.4:
+            use_qualifier = True
     
-    # Division criteria
-    criteria_options.append('division')
-    
-    # Conference criteria
-    criteria_options.append('conference')
-    
-    # Select criteria type
-    if row_index == 0:
-        # First row: prefer team + year (simpler)
-        if 'team' in criteria_options:
-            selected = 'team'
+    if use_qualifier and available_qualifiers:
+        # Select a stat qualifier
+        qualifier_key = rng.choice(available_qualifiers)
+        qualifier_info = STAT_QUALIFIERS[qualifier_key]
+        
+        criteria['qualifier'] = qualifier_key
+        criteria['qualifier_type'] = qualifier_info.get('qualifier_type', 'same_season')
+        criteria['qualifier_display'] = qualifier_info.get('display', qualifier_key)
+        used_qualifiers.add(qualifier_key)
+        
+    else:
+        # Use team-based criteria
+        criteria_options = []
+        
+        # Team criteria
+        available_teams = [t for t in NFL_TEAMS.keys() if t not in used_teams]
+        if available_teams:
+            criteria_options.append('team')
+        
+        # Division criteria
+        criteria_options.append('division')
+        
+        # Conference criteria
+        criteria_options.append('conference')
+        
+        # Position criteria (only if compatible with stat and multiple positions)
+        available_positions = [p for p in eligible_positions if p not in used_positions]
+        if available_positions and len(eligible_positions) > 1:
+            criteria_options.append('position')
+        
+        # Select criteria type
+        if row_index == 0:
+            # First row: prefer team (simpler start)
+            if 'team' in criteria_options:
+                selected = 'team'
+            else:
+                selected = rng.choice(criteria_options)
         else:
             selected = rng.choice(criteria_options)
-    else:
-        # Later rows: random selection
-        selected = rng.choice(criteria_options)
-    
-    # Apply selected criteria
-    if selected == 'team':
-        team = rng.choice(available_teams)
-        criteria['team'] = team
-        used_teams.add(team)
-    elif selected == 'position':
-        position = rng.choice(available_positions)
-        criteria['position'] = position
-        used_positions.add(position)
-    elif selected == 'division':
-        criteria['division'] = rng.choice(DIVISIONS)
-    elif selected == 'conference':
-        criteria['conference'] = rng.choice(CONFERENCES)
-    
-    # Occasionally add a qualifier (20% chance for rows 2-4)
-    if row_index >= 2 and rng.random() < 0.2:
-        qualifiers = [
-            ('pro_bowl', 'same_season', 'Made Pro Bowl'),
-            ('playoff', 'same_season', 'Made Playoffs'),
-        ]
-        qual = rng.choice(qualifiers)
-        criteria['qualifier'] = qual[0]
-        criteria['qualifier_type'] = qual[1]
-        criteria['qualifier_display'] = qual[2]
+        
+        # Apply selected criteria
+        if selected == 'team':
+            team = rng.choice(available_teams)
+            criteria['team'] = team
+            used_teams.add(team)
+        elif selected == 'position':
+            position = rng.choice(available_positions)
+            criteria['position'] = position
+            used_positions.add(position)
+        elif selected == 'division':
+            criteria['division'] = rng.choice(DIVISIONS)
+        elif selected == 'conference':
+            criteria['conference'] = rng.choice(CONFERENCES)
     
     return criteria
 
 
 def generate_puzzle(puzzle_date: Optional[date] = None, override: Optional[Dict] = None) -> Dict:
-    """
-    Generate a complete puzzle for a given date
-    
-    Args:
-        puzzle_date: Date to generate puzzle for. Defaults to today.
-        override: Optional override configuration
-        
-    Returns:
-        Dictionary with puzzle configuration
-    """
+    """Generate a complete puzzle for a given date"""
     if override:
         return override
     
     if puzzle_date is None:
         puzzle_date = get_puzzle_date()
     
-    # Get deterministic random generator
     seed = get_date_seed(puzzle_date)
     rng = random.Random(seed)
     
@@ -198,15 +181,37 @@ def generate_puzzle(puzzle_date: Optional[date] = None, override: Optional[Dict]
     stat_category = rng.choice(stat_keys)
     stat_info = STAT_CATEGORIES[stat_category]
     
+    # Determine puzzle structure:
+    # - 2-3 team-based rows
+    # - 2-3 qualifier-based rows
+    # This ensures variety in every puzzle
+    
+    num_qualifier_rows = rng.choice([2, 2, 3])  # Weighted towards 2
+    num_team_rows = 5 - num_qualifier_rows
+    
+    # Shuffle which rows get qualifiers
+    row_types = ['team_based'] * num_team_rows + ['qualifier'] * num_qualifier_rows
+    rng.shuffle(row_types)
+    
+    # But always make row 0 team-based for a simpler start
+    if row_types[0] == 'qualifier':
+        # Find first team_based and swap
+        for i in range(1, 5):
+            if row_types[i] == 'team_based':
+                row_types[0], row_types[i] = row_types[i], row_types[0]
+                break
+    
     # Generate 5 rows of criteria
     rows = []
     used_teams = set()
     used_positions = set()
+    used_qualifiers = set()
     
     for i in range(5):
         criteria = generate_criteria(
             rng, stat_category, stat_info,
-            used_teams, used_positions, i
+            used_teams, used_positions, used_qualifiers, i,
+            force_type=row_types[i]
         )
         rows.append(criteria)
     
@@ -223,16 +228,12 @@ def generate_puzzle(puzzle_date: Optional[date] = None, override: Optional[Dict]
 
 
 def format_criteria_display(criteria: Dict) -> str:
-    """
-    Format criteria for display in UI
-    
-    Args:
-        criteria: Criteria dictionary
-        
-    Returns:
-        Human-readable criteria string
-    """
+    """Format criteria for display in UI"""
     parts = []
+    
+    # Qualifier takes precedence in display
+    if criteria.get('qualifier_display'):
+        parts.append(criteria['qualifier_display'])
     
     if criteria.get('team'):
         team_info = NFL_TEAMS.get(criteria['team'], {})
@@ -255,15 +256,7 @@ def format_criteria_display(criteria: Dict) -> str:
 
 
 def format_qualifier_display(criteria: Dict) -> Optional[str]:
-    """
-    Format qualifier for display
-    
-    Args:
-        criteria: Criteria dictionary
-        
-    Returns:
-        Qualifier display string or None
-    """
+    """Format qualifier for display"""
     if criteria.get('qualifier_display'):
         qualifier_type = criteria.get('qualifier_type', 'same_season')
         type_label = 'SAME SEASON' if qualifier_type == 'same_season' else 'CAREER'
@@ -301,12 +294,7 @@ def get_override(puzzle_date: date) -> Optional[Dict]:
 
 
 def get_daily_puzzle() -> Dict:
-    """
-    Get today's puzzle (with override support)
-    
-    Returns:
-        Puzzle configuration dictionary
-    """
+    """Get today's puzzle (with override support)"""
     today = get_puzzle_date()
     
     # Check for override

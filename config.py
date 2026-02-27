@@ -232,3 +232,317 @@ CRITERIA_TYPES = [
 
 # Minimum valid answers per row
 MIN_VALID_ANSWERS = 12
+
+# =============================================================================
+# STAT QUALIFIERS - Creative criteria for puzzle variety
+# =============================================================================
+
+# Qualifier types:
+# - 'threshold': Compare a stat against a value (>, <, >=, <=, ==)
+# - 'fantasy_rank': Player's fantasy ranking at their position
+# - 'career': Career-based qualifier (checked across all seasons)
+
+STAT_QUALIFIERS = {
+    # =========================================================================
+    # FANTASY RANKING QUALIFIERS (same season)
+    # =========================================================================
+    'fantasy_top_5_qb': {
+        'display': 'Top 5 Fantasy QB',
+        'type': 'fantasy_rank',
+        'position': 'QB',
+        'rank_column': 'fantasy_points',
+        'max_rank': 5,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['PASSING', 'RUSHING', 'FANTASY'],
+    },
+    'fantasy_top_10_qb': {
+        'display': 'Top 10 Fantasy QB',
+        'type': 'fantasy_rank',
+        'position': 'QB',
+        'rank_column': 'fantasy_points',
+        'max_rank': 10,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['PASSING', 'RUSHING', 'FANTASY'],
+    },
+    'fantasy_outside_top_10_qb': {
+        'display': 'Outside Top 10 Fantasy QB',
+        'type': 'fantasy_rank',
+        'position': 'QB',
+        'rank_column': 'fantasy_points',
+        'min_rank': 11,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['PASSING', 'RUSHING', 'FANTASY'],
+    },
+    'fantasy_top_5_rb': {
+        'display': 'Top 5 Fantasy RB',
+        'type': 'fantasy_rank',
+        'position': 'RB',
+        'rank_column': 'fantasy_points_ppr',
+        'max_rank': 5,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RUSHING', 'RECEIVING', 'FANTASY'],
+    },
+    'fantasy_top_10_rb': {
+        'display': 'Top 10 Fantasy RB',
+        'type': 'fantasy_rank',
+        'position': 'RB',
+        'rank_column': 'fantasy_points_ppr',
+        'max_rank': 10,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RUSHING', 'RECEIVING', 'FANTASY'],
+    },
+    'fantasy_outside_top_10_rb': {
+        'display': 'Outside Top 10 Fantasy RB',
+        'type': 'fantasy_rank',
+        'position': 'RB',
+        'rank_column': 'fantasy_points_ppr',
+        'min_rank': 11,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RUSHING', 'RECEIVING', 'FANTASY'],
+    },
+    'fantasy_top_5_wr': {
+        'display': 'Top 5 Fantasy WR',
+        'type': 'fantasy_rank',
+        'position': 'WR',
+        'rank_column': 'fantasy_points_ppr',
+        'max_rank': 5,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RECEIVING', 'FANTASY'],
+    },
+    'fantasy_top_10_wr': {
+        'display': 'Top 10 Fantasy WR',
+        'type': 'fantasy_rank',
+        'position': 'WR',
+        'rank_column': 'fantasy_points_ppr',
+        'max_rank': 10,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RECEIVING', 'FANTASY'],
+    },
+    'fantasy_outside_top_10_wr': {
+        'display': 'Outside Top 10 Fantasy WR',
+        'type': 'fantasy_rank',
+        'position': 'WR',
+        'rank_column': 'fantasy_points_ppr',
+        'min_rank': 11,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RECEIVING', 'FANTASY'],
+    },
+    'fantasy_top_5_te': {
+        'display': 'Top 5 Fantasy TE',
+        'type': 'fantasy_rank',
+        'position': 'TE',
+        'rank_column': 'fantasy_points_ppr',
+        'max_rank': 5,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RECEIVING', 'FANTASY'],
+    },
+    'fantasy_top_10_te': {
+        'display': 'Top 10 Fantasy TE',
+        'type': 'fantasy_rank',
+        'position': 'TE',
+        'rank_column': 'fantasy_points_ppr',
+        'max_rank': 10,
+        'qualifier_type': 'same_season',
+        'eligible_stat_types': ['RECEIVING', 'FANTASY'],
+    },
+    
+    # =========================================================================
+    # STAT THRESHOLD QUALIFIERS - QB specific (same season)
+    # =========================================================================
+    'qb_300_rush_yards': {
+        'display': '300+ Rush Yards',
+        'type': 'threshold',
+        'column': 'rushing_yards',
+        'operator': '>=',
+        'value': 300,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB'],
+        'eligible_stat_types': ['PASSING'],
+    },
+    'qb_500_rush_yards': {
+        'display': '500+ Rush Yards',
+        'type': 'threshold',
+        'column': 'rushing_yards',
+        'operator': '>=',
+        'value': 500,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB'],
+        'eligible_stat_types': ['PASSING'],
+    },
+    'qb_5_rush_tds': {
+        'display': '5+ Rush TDs',
+        'type': 'threshold',
+        'column': 'rushing_tds',
+        'operator': '>=',
+        'value': 5,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB'],
+        'eligible_stat_types': ['PASSING'],
+    },
+    'qb_under_10_int': {
+        'display': 'Under 10 INTs',
+        'type': 'threshold',
+        'column': 'interceptions_thrown',
+        'operator': '<',
+        'value': 10,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB'],
+        'eligible_stat_types': ['PASSING'],
+    },
+    'qb_4000_pass_yards': {
+        'display': '4000+ Pass Yards',
+        'type': 'threshold',
+        'column': 'passing_yards',
+        'operator': '>=',
+        'value': 4000,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB'],
+        'eligible_stat_types': ['PASSING'],
+    },
+    'qb_30_pass_tds': {
+        'display': '30+ Pass TDs',
+        'type': 'threshold',
+        'column': 'passing_tds',
+        'operator': '>=',
+        'value': 30,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB'],
+        'eligible_stat_types': ['PASSING'],
+    },
+    
+    # =========================================================================
+    # STAT THRESHOLD QUALIFIERS - RB specific (same season)
+    # =========================================================================
+    'rb_1000_rush_yards': {
+        'display': '1000+ Rush Yards',
+        'type': 'threshold',
+        'column': 'rushing_yards',
+        'operator': '>=',
+        'value': 1000,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['RB', 'FB'],
+        'eligible_stat_types': ['RUSHING'],
+    },
+    'rb_50_receptions': {
+        'display': '50+ Receptions',
+        'type': 'threshold',
+        'column': 'receptions',
+        'operator': '>=',
+        'value': 50,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['RB', 'FB'],
+        'eligible_stat_types': ['RUSHING', 'RECEIVING'],
+    },
+    'rb_10_rush_tds': {
+        'display': '10+ Rush TDs',
+        'type': 'threshold',
+        'column': 'rushing_tds',
+        'operator': '>=',
+        'value': 10,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['RB', 'FB'],
+        'eligible_stat_types': ['RUSHING'],
+    },
+    'rb_under_500_rush_yards': {
+        'display': 'Under 500 Rush Yards',
+        'type': 'threshold',
+        'column': 'rushing_yards',
+        'operator': '<',
+        'value': 500,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['RB', 'FB'],
+        'eligible_stat_types': ['RECEIVING'],  # For receiving-focused RBs
+    },
+    
+    # =========================================================================
+    # STAT THRESHOLD QUALIFIERS - WR/TE specific (same season)
+    # =========================================================================
+    'wr_1000_rec_yards': {
+        'display': '1000+ Rec Yards',
+        'type': 'threshold',
+        'column': 'receiving_yards',
+        'operator': '>=',
+        'value': 1000,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['WR', 'TE'],
+        'eligible_stat_types': ['RECEIVING'],
+    },
+    'wr_100_receptions': {
+        'display': '100+ Receptions',
+        'type': 'threshold',
+        'column': 'receptions',
+        'operator': '>=',
+        'value': 100,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['WR', 'TE'],
+        'eligible_stat_types': ['RECEIVING'],
+    },
+    'wr_10_rec_tds': {
+        'display': '10+ Rec TDs',
+        'type': 'threshold',
+        'column': 'receiving_tds',
+        'operator': '>=',
+        'value': 10,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['WR', 'TE'],
+        'eligible_stat_types': ['RECEIVING'],
+    },
+    'wr_under_50_receptions': {
+        'display': 'Under 50 Receptions',
+        'type': 'threshold',
+        'column': 'receptions',
+        'operator': '<',
+        'value': 50,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['WR', 'TE'],
+        'eligible_stat_types': ['RECEIVING'],  # Big play receivers
+    },
+    
+    # =========================================================================
+    # GENERAL STAT THRESHOLDS (any position)
+    # =========================================================================
+    'any_200_fantasy_pts': {
+        'display': '200+ Fantasy Pts',
+        'type': 'threshold',
+        'column': 'fantasy_points',
+        'operator': '>=',
+        'value': 200,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB', 'RB', 'WR', 'TE', 'FB'],
+        'eligible_stat_types': ['PASSING', 'RUSHING', 'RECEIVING', 'FANTASY'],
+    },
+    'any_300_fantasy_pts': {
+        'display': '300+ Fantasy Pts',
+        'type': 'threshold',
+        'column': 'fantasy_points',
+        'operator': '>=',
+        'value': 300,
+        'qualifier_type': 'same_season',
+        'eligible_positions': ['QB', 'RB', 'WR', 'TE', 'FB'],
+        'eligible_stat_types': ['PASSING', 'RUSHING', 'RECEIVING', 'FANTASY'],
+    },
+}
+
+# Helper function to get qualifiers compatible with a stat category
+def get_compatible_qualifiers(stat_category: str) -> list:
+    """Get list of qualifier keys compatible with a stat category"""
+    stat_info = STAT_CATEGORIES.get(stat_category, {})
+    stat_type = stat_info.get('type', '')
+    eligible_positions = stat_info.get('eligible_positions', [])
+    
+    compatible = []
+    for key, qual in STAT_QUALIFIERS.items():
+        # Check if stat type is compatible
+        if stat_type not in qual.get('eligible_stat_types', []):
+            continue
+        
+        # For position-specific qualifiers, check position compatibility
+        qual_positions = qual.get('eligible_positions', [])
+        if qual_positions:
+            # At least one eligible position must match
+            if not any(pos in eligible_positions for pos in qual_positions):
+                continue
+        
+        compatible.append(key)
+    
+    return compatible

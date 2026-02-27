@@ -1,6 +1,6 @@
 """
 Validator for NFL StatPad Game
-Validates player submissions against criteria
+Validates player submissions against criteria including stat qualifiers
 Uses Polars for data operations
 """
 import polars as pl
@@ -9,15 +9,16 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import NFL_TEAMS, POSITION_GROUPS, STAT_CATEGORIES, REVERSE_TEAM_MAPPINGS, TEAM_NAME_MAPPINGS
+from config import (
+    NFL_TEAMS, POSITION_GROUPS, STAT_CATEGORIES, 
+    REVERSE_TEAM_MAPPINGS, TEAM_NAME_MAPPINGS, STAT_QUALIFIERS
+)
 
 
 def get_team_variants(team_abbr: str) -> List[str]:
     """Get all possible team abbreviation variants for a team"""
-    # Check if there are reverse mappings for this team
     if team_abbr in REVERSE_TEAM_MAPPINGS:
         return REVERSE_TEAM_MAPPINGS[team_abbr]
-    # Otherwise just return the team itself
     return [team_abbr]
 
 
@@ -26,6 +27,122 @@ def normalize_team(team_abbr: str) -> str:
     if team_abbr in TEAM_NAME_MAPPINGS:
         return TEAM_NAME_MAPPINGS[team_abbr]
     return team_abbr
+
+
+def check_threshold_qualifier(player_row: dict, qualifier_info: dict) -> Tuple[bool, str]:
+    """
+    Check if a player meets a threshold qualifier
+    
+    Returns:
+        Tuple of (meets_qualifier, error_message)
+    """
+    column = qualifier_info.get('column')
+    operator = qualifier_info.get('operator', '>=')
+    value = qualifier_info.get('value', 0)
+    display = qualifier_info.get('display', 'qualifier')
+    
+    player_value = player_row.get(column)
+    
+    if player_value is None:
+        return False, f"No {column} data available"
+    
+    # Apply operator
+    if operator == '>=':
+        meets = player_value >= value
+    elif operator == '>':
+        meets = player_value > value
+    elif operator == '<=':
+        meets = player_value <= value
+    elif operator == '<':
+        meets = player_value < value
+    elif operator == '==':
+        meets = player_value == value
+    else:
+        meets = player_value >= value
+    
+    if not meets:
+        return False, f"Does not meet {display} requirement ({player_value:.0f} {column})"
+    
+    return True, ""
+
+
+def check_fantasy_rank_qualifier(
+    df: pl.DataFrame, 
+    player_row: dict, 
+    qualifier_info: dict,
+    year: int
+) -> Tuple[bool, str]:
+    """
+    Check if a player meets a fantasy ranking qualifier
+    
+    Returns:
+        Tuple of (meets_qualifier, error_message)
+    """
+    position = qualifier_info.get('position')
+    rank_column = qualifier_info.get('rank_column', 'fantasy_points')
+    max_rank = qualifier_info.get('max_rank')
+    min_rank = qualifier_info.get('min_rank')
+    display = qualifier_info.get('display', 'fantasy rank')
+    
+    player_name = player_row.get('player', '')
+    player_position = player_row.get('position', '')
+    
+    # Get all players at this position for this year
+    position_players = df.filter(
+        (pl.col('season') == year) &
+        (pl.col('position') == position) &
+        (pl.col(rank_column).is_not_null()) &
+        (pl.col(rank_column) > 0)
+    ).sort(rank_column, descending=True)
+    
+    if len(position_players) == 0:
+        return False, f"No {position} data for {year}"
+    
+    # Find player's rank
+    player_rank = None
+    for i, row in enumerate(position_players.iter_rows(named=True), 1):
+        if row.get('player', '').lower() == player_name.lower():
+            player_rank = i
+            break
+    
+    if player_rank is None:
+        # Player might be at a different position
+        return False, f"{player_name} was not ranked as a {position} in {year}"
+    
+    # Check rank requirements
+    if max_rank is not None and player_rank > max_rank:
+        return False, f"{player_name} was #{player_rank} fantasy {position} in {year} (need Top {max_rank})"
+    
+    if min_rank is not None and player_rank < min_rank:
+        return False, f"{player_name} was #{player_rank} fantasy {position} in {year} (need outside Top {min_rank - 1})"
+    
+    return True, ""
+
+
+def validate_qualifier(
+    df: pl.DataFrame,
+    player_row: dict,
+    qualifier_key: str,
+    year: int
+) -> Tuple[bool, str]:
+    """
+    Validate a player against a stat qualifier
+    
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if qualifier_key not in STAT_QUALIFIERS:
+        return True, ""  # Unknown qualifier, pass by default
+    
+    qualifier_info = STAT_QUALIFIERS[qualifier_key]
+    qualifier_type = qualifier_info.get('type')
+    
+    if qualifier_type == 'threshold':
+        return check_threshold_qualifier(player_row, qualifier_info)
+    elif qualifier_type == 'fantasy_rank':
+        return check_fantasy_rank_qualifier(df, player_row, qualifier_info, year)
+    else:
+        return True, ""  # Unknown type, pass by default
 
 
 def validate_player_submission(
@@ -48,10 +165,9 @@ def validate_player_submission(
     Returns:
         Tuple of (is_valid, player_data, error_message)
     """
-    # Ensure player_name is a string
     player_name = str(player_name).strip()
     
-    # Find player in database (case-insensitive contains)
+    # Find player in database
     player_name_lower = player_name.lower()
     player_matches = df.filter(
         (pl.col('player').str.to_lowercase().str.contains(player_name_lower)) &
@@ -59,7 +175,6 @@ def validate_player_submission(
     )
     
     if len(player_matches) == 0:
-        # Try exact match
         player_matches = df.filter(
             (pl.col('player').str.to_lowercase() == player_name_lower) &
             (pl.col('season') == year)
@@ -68,7 +183,7 @@ def validate_player_submission(
     if len(player_matches) == 0:
         return False, None, f"Player '{player_name}' not found for year {year}"
     
-    # Get the best match (highest stat value)
+    # Get the best match
     if stat_category in player_matches.columns:
         player_matches = player_matches.sort(stat_category, descending=True)
     
@@ -82,9 +197,7 @@ def validate_player_submission(
     if stat_value <= 0:
         return False, None, f"{player_name} has no {stat_category} in {year}"
     
-    # Validate against criteria
-    
-    # Check team (using team variants to handle historical abbreviations)
+    # Validate against team criteria
     if criteria.get('team'):
         player_team = player_row.get('team', '')
         valid_teams = get_team_variants(criteria['team'])
@@ -106,7 +219,7 @@ def validate_player_submission(
         if player_position not in valid_positions:
             return False, None, f"{player_name} is not a {criteria['position']}"
     
-    # Check division (normalize team name first)
+    # Check division
     if criteria.get('division'):
         player_team = player_row.get('team', '')
         normalized_team = normalize_team(player_team)
@@ -114,7 +227,7 @@ def validate_player_submission(
         if team_info.get('division') != criteria['division']:
             return False, None, f"{player_name}'s team was not in {criteria['division']} in {year}"
     
-    # Check conference (normalize team name first)
+    # Check conference
     if criteria.get('conference'):
         player_team = player_row.get('team', '')
         normalized_team = normalize_team(player_team)
@@ -122,6 +235,12 @@ def validate_player_submission(
         team_division = team_info.get('division', '')
         if criteria['conference'] not in team_division:
             return False, None, f"{player_name}'s team was not in {criteria['conference']} in {year}"
+    
+    # Check stat qualifier
+    if criteria.get('qualifier'):
+        is_valid, error_msg = validate_qualifier(df, player_row, criteria['qualifier'], year)
+        if not is_valid:
+            return False, None, error_msg
     
     # Build player data response
     player_data = {
@@ -143,19 +262,7 @@ def find_player_best_year(
     stat_category: str,
     criteria: Dict
 ) -> Optional[Dict]:
-    """
-    Find the best year for a player given criteria (for Easy Mode)
-    
-    Args:
-        df: Player database DataFrame (Polars)
-        player_name: Name of the player
-        stat_category: The stat category being maximized
-        criteria: Row criteria to filter by
-        
-    Returns:
-        Dictionary with best year data or None
-    """
-    # Find all matching player records
+    """Find the best year for a player given criteria (for Easy Mode)"""
     player_matches = df.filter(
         pl.col('player').str.to_lowercase().str.contains(player_name.lower())
     )
@@ -200,8 +307,23 @@ def find_player_best_year(
     if len(player_matches) == 0:
         return None
     
-    # Get best year (sort by stat descending, take first)
-    best_row = player_matches.sort(stat_category, descending=True).row(0, named=True)
+    # For qualifier-based criteria, filter to years that meet the qualifier
+    if criteria.get('qualifier'):
+        valid_rows = []
+        for row in player_matches.iter_rows(named=True):
+            is_valid, _ = validate_qualifier(df, row, criteria['qualifier'], row['season'])
+            if is_valid:
+                valid_rows.append(row)
+        
+        if not valid_rows:
+            return None
+        
+        # Sort by stat value and get best
+        valid_rows.sort(key=lambda x: x.get(stat_category, 0), reverse=True)
+        best_row = valid_rows[0]
+    else:
+        # Get best year (sort by stat descending, take first)
+        best_row = player_matches.sort(stat_category, descending=True).row(0, named=True)
     
     return {
         'player': best_row.get('player', player_name),
@@ -221,23 +343,10 @@ def search_players(
     criteria: Dict,
     limit: int = 10
 ) -> List[Dict]:
-    """
-    Search for players matching a query and criteria
-    
-    Args:
-        df: Player database DataFrame (Polars)
-        query: Search query (partial player name)
-        stat_category: The stat category being maximized
-        criteria: Row criteria to filter by
-        limit: Maximum number of results
-        
-    Returns:
-        List of matching player dictionaries
-    """
+    """Search for players matching a query and criteria"""
     if not query or len(query) < 2:
         return []
     
-    # Find matching players
     matches = df.filter(
         pl.col('player').str.to_lowercase().str.contains(query.lower())
     )
@@ -303,17 +412,7 @@ def get_all_valid_players(
     stat_category: str,
     criteria: Dict
 ) -> pl.DataFrame:
-    """
-    Get all valid player-year combinations for criteria
-    
-    Args:
-        df: Player database DataFrame (Polars)
-        stat_category: The stat category being maximized
-        criteria: Row criteria to filter by
-        
-    Returns:
-        DataFrame of valid player-year combinations
-    """
+    """Get all valid player-year combinations for criteria"""
     result = df
     
     # Filter by stat existence
@@ -348,6 +447,19 @@ def get_all_valid_players(
         teams_in_conf = [abbr for abbr, info in NFL_TEAMS.items() 
                         if criteria['conference'] in info.get('division', '')]
         result = result.filter(pl.col('team').is_in(teams_in_conf))
+    
+    # For qualifier-based criteria, filter to rows that meet the qualifier
+    if criteria.get('qualifier'):
+        valid_indices = []
+        for i, row in enumerate(result.iter_rows(named=True)):
+            is_valid, _ = validate_qualifier(df, row, criteria['qualifier'], row['season'])
+            if is_valid:
+                valid_indices.append(i)
+        
+        if valid_indices:
+            result = result[valid_indices]
+        else:
+            return pl.DataFrame()
     
     # Sort by stat value
     result = result.sort(stat_category, descending=True)
