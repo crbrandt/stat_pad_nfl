@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for dark theme and tier effects
+# Custom CSS for dark theme, tier effects, and mobile responsiveness
 def load_custom_css():
     st.markdown("""
     <style>
@@ -47,111 +47,149 @@ def load_custom_css():
     /* Header styling */
     .game-header {
         text-align: center;
-        padding: 20px 0;
+        padding: 15px 0;
         border-bottom: 2px solid #333;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
     
     .game-title {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: bold;
         color: #f39c12;
         margin: 0;
     }
     
-    /* Stats header */
+    /* Stats header - responsive */
     .stats-header {
         display: flex;
         justify-content: space-around;
         align-items: center;
-        padding: 20px;
+        padding: 15px;
         background: #16213e;
         border-radius: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
     }
     
     .stat-box {
         text-align: center;
+        min-width: 80px;
     }
     
     .stat-value {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #ffffff;
-    }
-    
-    .stat-label {
-        font-size: 0.8rem;
-        color: #888;
-        text-transform: uppercase;
-    }
-    
-    .category-name {
         font-size: 2rem;
         font-weight: bold;
         color: #ffffff;
     }
     
-    .category-type {
+    .stat-label {
         font-size: 0.7rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+    
+    .category-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffffff;
+    }
+    
+    .category-type {
+        font-size: 0.6rem;
         color: #888;
     }
     
-    /* Row styling */
+    /* Game row - mobile responsive */
     .game-row {
         background: #16213e;
         border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 10px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .game-row-content {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    /* Mobile-friendly row card */
+    .row-card {
+        background: #16213e;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .row-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .row-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+    
+    .row-info {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .row-years {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #fff;
+    }
+    
+    .row-criteria {
+        font-size: 0.85rem;
+        color: #ccc;
+        margin-top: 2px;
     }
     
     .team-logo {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         object-fit: contain;
     }
     
     .year-range {
         text-align: center;
-        min-width: 80px;
+        min-width: 60px;
     }
     
     .year-value {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         font-weight: bold;
     }
     
     .year-label {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         color: #888;
     }
     
     .qualifier-box {
         background: #0e4429;
-        padding: 8px 12px;
+        padding: 6px 10px;
         border-radius: 5px;
         text-align: center;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+        display: inline-block;
+        margin-top: 5px;
     }
     
     .qualifier-type {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         color: #4ade80;
-        margin-top: 4px;
-    }
-    
-    /* Add player button */
-    .add-player-btn {
-        background: #22c55e;
-        color: white;
-        padding: 15px 30px;
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        flex-grow: 1;
+        margin-top: 3px;
     }
     
     /* Completed row with tier glow */
@@ -189,32 +227,61 @@ def load_custom_css():
         50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
     }
     
+    /* Completed row card - mobile friendly */
+    .completed-card {
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 5px;
+    }
+    
+    .completed-card-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .player-info-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .player-score-compact {
+        text-align: right;
+        white-space: nowrap;
+    }
+    
     /* Player card in completed row */
     .player-card {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 10px;
         flex-grow: 1;
+        flex-wrap: wrap;
     }
     
     .player-headshot {
-        width: 80px;
-        height: 60px;
+        width: 60px;
+        height: 45px;
         object-fit: cover;
         border-radius: 5px;
     }
     
     .player-info {
         flex-grow: 1;
+        min-width: 120px;
     }
     
     .player-name {
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: bold;
     }
     
     .player-year {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         color: #888;
     }
     
@@ -223,47 +290,49 @@ def load_custom_css():
     }
     
     .stat-number {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         font-weight: bold;
     }
     
     .percentile-badge {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: #888;
     }
     
     /* Leaderboard dropdown */
     .leaderboard {
         background: #0f0f23;
-        padding: 10px;
+        padding: 8px;
         border-radius: 5px;
-        margin-top: 10px;
+        margin-top: 8px;
     }
     
     .leaderboard-header {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: #888;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     
     .leaderboard-row {
         display: flex;
         justify-content: space-between;
-        padding: 5px 0;
-        font-size: 0.85rem;
+        padding: 4px 0;
+        font-size: 0.8rem;
+        flex-wrap: wrap;
     }
     
     /* Footer buttons */
     .footer-buttons {
         display: flex;
         justify-content: center;
-        gap: 20px;
-        margin-top: 30px;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
     }
     
     .toggle-btn {
         background: #333;
-        padding: 10px 20px;
+        padding: 8px 16px;
         border-radius: 20px;
         cursor: pointer;
     }
@@ -272,43 +341,88 @@ def load_custom_css():
     .share-btn {
         background: #22c55e;
         color: white;
-        padding: 15px 30px;
+        padding: 12px 24px;
         border-radius: 8px;
         font-weight: bold;
         cursor: pointer;
         text-align: center;
-        margin: 20px auto;
+        margin: 15px auto;
         display: block;
         width: fit-content;
-    }
-    
-    /* Modal styling */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-    
-    .modal-content {
-        background: #1a1a2e;
-        padding: 30px;
-        border-radius: 15px;
-        max-width: 500px;
-        max-height: 80vh;
-        overflow-y: auto;
     }
     
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+        .game-title {
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.6rem;
+        }
+        
+        .team-logo, .row-logo {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .year-value {
+            font-size: 1rem;
+        }
+        
+        .player-name {
+            font-size: 0.9rem;
+        }
+        
+        .stat-number {
+            font-size: 1rem;
+        }
+        
+        /* Make columns stack better on mobile */
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+        
+        /* Compact the stats header on mobile */
+        .stats-header {
+            padding: 10px;
+            gap: 5px;
+        }
+        
+        .stat-box {
+            min-width: 60px;
+        }
+    }
+    
+    /* Very small screens */
+    @media (max-width: 480px) {
+        .game-title {
+            font-size: 1.3rem;
+        }
+        
+        .stat-value {
+            font-size: 1.3rem;
+        }
+        
+        .completed-card {
+            padding: 8px 10px;
+        }
+        
+        .player-info-compact {
+            font-size: 0.85rem;
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -339,6 +453,10 @@ def init_session_state():
     if 'player_db' not in st.session_state:
         with st.spinner("Loading player database..."):
             st.session_state.player_db = get_player_database()
+    
+    # Ensure expanded_rows has correct length
+    if len(st.session_state.expanded_rows) < 5:
+        st.session_state.expanded_rows = [False] * 5
 
 
 def render_header():
@@ -354,34 +472,27 @@ def render_stats_header():
     """Render the stats header with category, score, and guesses"""
     puzzle = st.session_state.puzzle
     total_score = calculate_total_score(st.session_state.scores)
-    total_guesses = st.session_state.total_guesses  # Use total guesses including failed attempts
+    total_guesses = st.session_state.total_guesses
     
-    col1, col2, col3 = st.columns(3)
+    # Use HTML for better mobile control
+    score_display = f"{total_score:,.0f}" if total_score == int(total_score) else f"{total_score:,.1f}"
     
-    with col1:
-        st.markdown(f"""
-        <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: bold;">{puzzle['stat_display']}</div>
-            <div style="font-size: 0.8rem; color: #888;">CATEGORY<br>({puzzle['stat_type']})</div>
+    st.markdown(f"""
+    <div class="stats-header">
+        <div class="stat-box">
+            <div class="stat-value">{puzzle['stat_display']}</div>
+            <div class="stat-label">CATEGORY ({puzzle['stat_type']})</div>
         </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        score_display = f"{total_score:,.0f}" if total_score == int(total_score) else f"{total_score:,.1f}"
-        st.markdown(f"""
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; font-weight: bold;">{score_display}</div>
-            <div style="font-size: 0.8rem; color: #888;">TOTAL SCORE</div>
+        <div class="stat-box">
+            <div class="stat-value">{score_display}</div>
+            <div class="stat-label">TOTAL SCORE</div>
         </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f"""
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; font-weight: bold;">{total_guesses}</div>
-            <div style="font-size: 0.8rem; color: #888;">TOTAL GUESSES</div>
+        <div class="stat-box">
+            <div class="stat-value">{total_guesses}</div>
+            <div class="stat-label">GUESSES</div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def get_logo_info_for_criteria(criteria: dict) -> dict:
@@ -394,17 +505,14 @@ def get_logo_info_for_criteria(criteria: dict) -> dict:
     conference = criteria.get('conference')
     
     if team_abbr:
-        # Single team
         return {'type': 'single', 'urls': [get_team_logo_url(team_abbr)]}
     elif division:
-        # Division - show all 4 team logos
         if division in DIVISION_TEAMS:
             logos = get_division_team_logos(division)
             return {'type': 'division', 'urls': logos, 'name': division}
         else:
             return {'type': 'single', 'urls': [NFL_LOGO_URL]}
     elif conference:
-        # Conference - show AFC or NFC logo
         if conference.upper() == 'AFC':
             return {'type': 'conference', 'urls': [AFC_LOGO_URL], 'name': 'AFC'}
         elif conference.upper() == 'NFC':
@@ -412,7 +520,6 @@ def get_logo_info_for_criteria(criteria: dict) -> dict:
         else:
             return {'type': 'single', 'urls': [NFL_LOGO_URL]}
     else:
-        # League-wide - show NFL logo
         return {'type': 'league', 'urls': [NFL_LOGO_URL]}
 
 
@@ -423,160 +530,98 @@ def render_game_row(row_index: int):
     submission = st.session_state.submissions[row_index]
     score_data = st.session_state.scores[row_index]
     
-    # Get logo info based on criteria
     logo_info = get_logo_info_for_criteria(criteria)
-    
-    # For backward compatibility, use first logo URL
     logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
     
-    # Format year range
     year_start = criteria.get('year_start', '')
     year_end = criteria.get('year_end', '')
-    
-    # Format qualifier
     qualifier_display = format_qualifier_display(criteria)
     
     if submission is not None and score_data is not None:
-        # Completed row
         render_completed_row(row_index, submission, score_data, criteria, logo_url)
     else:
-        # Incomplete row - show input
         render_input_row(row_index, criteria, logo_info, year_start, year_end, qualifier_display)
 
 
 def render_completed_row(row_index: int, submission: dict, score_data: dict, criteria: dict, logo_url: str):
     """Render a completed row with player info and tier styling"""
-    tier = score_data.get('tier', 'iron')
-    tier_color = TIER_COLORS.get(tier, '#374151')
-    tier_emoji = TIER_EMOJIS.get(tier, '⬛')
-    score = score_data.get('score', 0)
-    percentile = score_data.get('percentile', 0)
+    try:
+        tier = score_data.get('tier', 'iron') if score_data else 'iron'
+        tier_color = TIER_COLORS.get(tier, '#374151')
+        tier_emoji = TIER_EMOJIS.get(tier, '⬛')
+        score = score_data.get('score', 0) if score_data else 0
+        percentile = score_data.get('percentile', 0) if score_data else 0
+        
+        player_name = submission.get('player', 'Unknown') if submission else 'Unknown'
+        season = submission.get('season', '') if submission else ''
+        team = submission.get('team', 'N/A') if submission else 'N/A'
 
-    # Get player headshot
-    espn_id = submission.get('espn_id')
-    headshot_url = get_player_headshot_url(espn_id=espn_id) if espn_id else None
-
-    # Create a colored container for the completed row
-    st.markdown(f"""
-    <div style="
-        background: linear-gradient(90deg, {tier_color}33 0%, {tier_color}11 50%, transparent 100%);
-        border-left: 4px solid {tier_color};
-        border-radius: 8px;
-        padding: 12px 15px;
-        margin-bottom: 5px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    ">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.3rem;">{tier_emoji}</span>
-            <span style="font-weight: bold;">{submission['player']}</span>
-            <span style="color: #888;">({submission['season']})</span>
-        </div>
-        <div style="text-align: right;">
-            <span style="font-size: 1.3rem; font-weight: bold; color: {tier_color};">{score:,.0f}</span>
-            <span style="color: #888; font-size: 0.8rem;"> pts</span>
-            <span style="color: #666; font-size: 0.7rem; margin-left: 10px;">{percentile:.0f}%</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Create expandable section for details
-    with st.expander(f"View details for {submission['player']}", expanded=st.session_state.expanded_rows[row_index]):
-        # Player card
-        col1, col2, col3 = st.columns([1, 3, 1])
-        
-        with col1:
-            if headshot_url:
-                st.image(headshot_url, width=80)
-            else:
-                st.image(logo_url, width=60)
-        
-        with col2:
-            st.markdown(f"""
-            <div>
-                <div style="font-size: 1.3rem; font-weight: bold;">{submission['player']}</div>
-                <div style="color: #888;">{submission['season']} • {submission.get('team', 'N/A')}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
-            <div style="text-align: right;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: {tier_color};">
-                    {score_data['score']:,.0f}
-                </div>
-                <div style="font-size: 0.7rem; color: #888;">
-                    {score_data['percentile']:.0f}th PERCENTILE
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Tier badge
+        # Mobile-friendly completed row card
         st.markdown(f"""
-        <div style="background: {tier_color}; padding: 5px 15px; border-radius: 15px; 
-                    display: inline-block; margin: 10px 0;">
-            {TIER_EMOJIS.get(tier, '⬛')} {tier.upper()}
+        <div class="completed-card" style="
+            background: linear-gradient(90deg, {tier_color}33 0%, {tier_color}11 50%, transparent 100%);
+            border-left: 4px solid {tier_color};
+        ">
+            <div class="completed-card-content">
+                <div class="player-info-compact">
+                    <span style="font-size: 1.2rem;">{tier_emoji}</span>
+                    <span style="font-weight: bold;">{player_name}</span>
+                    <span style="color: #888;">({season})</span>
+                </div>
+                <div class="player-score-compact">
+                    <span style="font-size: 1.2rem; font-weight: bold; color: {tier_color};">{score:,.0f}</span>
+                    <span style="color: #888; font-size: 0.75rem;"> pts</span>
+                    <span style="color: #666; font-size: 0.65rem; margin-left: 8px;">{percentile:.0f}%</span>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Top 5 leaderboard
-        st.markdown("---")
-        st.markdown("**Top 5 for this criteria:**")
-        
-        top_5 = get_top_5_for_criteria(
-            st.session_state.player_db,
-            st.session_state.puzzle['stat_category'],
-            criteria
-        )
-        
-        for i, player in enumerate(top_5, 1):
-            is_selected = (player['player'].lower() == submission['player'].lower() and 
-                          player['season'] == submission['season'])
-            highlight = "→ " if is_selected else "  "
-            st.markdown(f"{highlight}**{i}.** {player['player']} ({player['season']}) - {player['team']} - **{player['stat_value']:,.0f}**")
 
-
-def get_player_autocomplete_options(df, search_term: str, limit: int = 10) -> list:
-    """Get autocomplete suggestions for player names"""
-    if not search_term or len(search_term) < 2:
-        return []
-    
-    search_lower = search_term.lower()
-    
-    # Get unique player names
-    if hasattr(df, 'to_pandas'):
-        # Polars DataFrame
-        all_players = df.select('player').unique().to_series().to_list()
-    else:
-        # Pandas DataFrame
-        all_players = df['player'].unique().tolist()
-    
-    # Filter by search term (first name, last name, or full name)
-    matches = []
-    for player in all_players:
-        if player is None:
-            continue
-        player_lower = player.lower()
-        # Match if search term is at start of first name, last name, or anywhere in name
-        name_parts = player_lower.split()
-        if (player_lower.startswith(search_lower) or 
-            any(part.startswith(search_lower) for part in name_parts) or
-            search_lower in player_lower):
-            matches.append(player)
-    
-    # Sort by relevance (exact start match first, then alphabetical)
-    def sort_key(name):
-        name_lower = name.lower()
-        if name_lower.startswith(search_lower):
-            return (0, name)
-        elif any(part.startswith(search_lower) for part in name_lower.split()):
-            return (1, name)
-        else:
-            return (2, name)
-    
-    matches.sort(key=sort_key)
-    return matches[:limit]
+        # Expandable details - with error handling
+        try:
+            expanded = False
+            if hasattr(st.session_state, 'expanded_rows') and len(st.session_state.expanded_rows) > row_index:
+                expanded = st.session_state.expanded_rows[row_index]
+            
+            with st.expander(f"View details for {player_name}", expanded=expanded):
+                # Tier badge
+                st.markdown(f"""
+                <div style="background: {tier_color}; padding: 5px 12px; border-radius: 15px; 
+                            display: inline-block; margin: 8px 0; font-size: 0.85rem;">
+                    {tier_emoji} {tier.upper()}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"**{player_name}** • {season} • {team}")
+                st.markdown(f"**Score:** {score:,.0f} pts ({percentile:.0f}th percentile)")
+                
+                # Top 5 leaderboard
+                st.markdown("---")
+                st.markdown("**Top 5 for this criteria:**")
+                
+                try:
+                    top_5 = get_top_5_for_criteria(
+                        st.session_state.player_db,
+                        st.session_state.puzzle['stat_category'],
+                        criteria
+                    )
+                    
+                    for i, player in enumerate(top_5, 1):
+                        is_selected = (player.get('player', '').lower() == player_name.lower() and 
+                                      player.get('season') == season)
+                        highlight = "→ " if is_selected else "  "
+                        p_name = player.get('player', 'Unknown')
+                        p_season = player.get('season', '')
+                        p_team = player.get('team', 'N/A')
+                        p_stat = player.get('stat_value', 0)
+                        st.markdown(f"{highlight}**{i}.** {p_name} ({p_season}) - {p_team} - **{p_stat:,.0f}**")
+                except Exception as e:
+                    st.markdown("*Could not load top 5*")
+        except Exception as e:
+            pass  # Silently handle expander errors
+            
+    except Exception as e:
+        st.error(f"Error displaying row: {str(e)}")
 
 
 @st.cache_data
@@ -584,111 +629,77 @@ def get_all_player_names():
     """Get all unique player names from the database (cached)"""
     df = get_player_database()
     if hasattr(df, 'to_pandas'):
-        # Polars DataFrame
         all_players = df.select('player').unique().to_series().to_list()
     else:
-        # Pandas DataFrame
         all_players = df['player'].unique().tolist()
-    # Filter out None values and sort
     return sorted([p for p in all_players if p is not None])
 
 
-def search_players_callback(search_term: str) -> list:
-    """Callback function for st_searchbox to search players"""
-    if not search_term or len(search_term) < 2:
-        return []
+def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
+    """Render an input row for player submission - mobile friendly"""
     
-    search_lower = search_term.lower()
+    # Get criteria text
+    criteria_text = format_criteria_display(criteria)
+    
+    # Year display
+    if year_start and year_end:
+        if year_start == year_end:
+            year_display = f"{year_start}"
+        else:
+            year_display = f"{year_start}-{year_end}"
+    else:
+        year_display = ""
+    
+    # Row header with logo and info (using HTML for mobile control)
+    logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
+    
+    st.markdown(f"""
+    <div class="row-card">
+        <div class="row-header">
+            <img src="{logo_url}" class="row-logo" onerror="this.style.display='none'">
+            <div class="row-info">
+                <div class="row-years">{year_display}</div>
+                <div class="row-criteria">{criteria_text}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Show qualifier if present
+    if qualifier_display:
+        st.markdown(f"""
+        <div class="qualifier-box">
+            {qualifier_display.replace(chr(10), '<br>')}
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Player input - full width for mobile
     all_players = get_all_player_names()
     
-    # Filter by search term
-    matches = []
-    for player in all_players:
-        player_lower = player.lower()
-        name_parts = player_lower.split()
-        if (player_lower.startswith(search_lower) or 
-            any(part.startswith(search_lower) for part in name_parts) or
-            search_lower in player_lower):
-            matches.append(player)
+    player_input = st.selectbox(
+        "Select player",
+        options=[""] + all_players,
+        key=f"player_select_{row_index}",
+        label_visibility="collapsed",
+        index=0
+    )
     
-    # Sort by relevance
-    def sort_key(name):
-        name_lower = name.lower()
-        if name_lower.startswith(search_lower):
-            return (0, name)
-        elif any(part.startswith(search_lower) for part in name_lower.split()):
-            return (1, name)
-        else:
-            return (2, name)
-    
-    matches.sort(key=sort_key)
-    return matches[:15]
-
-
-def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
-    """Render an input row for player submission"""
-    
-    col1, col2, col3, col4 = st.columns([1, 1, 2, 2])
-    
-    with col1:
-        # Handle different logo types
-        if logo_info['type'] == 'division':
-            # Show 4 team logos in a 2x2 grid
-            logo_cols = st.columns(2)
-            for i, url in enumerate(logo_info['urls'][:4]):
-                with logo_cols[i % 2]:
-                    st.image(url, width=28)
-        else:
-            # Single logo (team, conference, or league)
-            st.image(logo_info['urls'][0], width=60)
-    
-    with col2:
-        if year_start and year_end:
-            if year_start == year_end:
-                st.markdown(f"**{year_start}**")
-            else:
-                st.markdown(f"**{year_start}**<br>to<br>**{year_end}**", unsafe_allow_html=True)
-    
-    with col3:
-        # Show criteria
-        criteria_text = format_criteria_display(criteria)
-        st.markdown(f"*{criteria_text}*")
-        
-        if qualifier_display:
-            st.markdown(f"""
-            <div style="background: #0e4429; padding: 5px 10px; border-radius: 5px; 
-                        font-size: 0.8rem; margin-top: 5px;">
-                {qualifier_display.replace(chr(10), '<br>')}
-            </div>
-            """, unsafe_allow_html=True)
-    
-    with col4:
-        # Get all player names for selectbox
-        all_players = get_all_player_names()
-        
-        # Use selectbox with search capability
-        player_input = st.selectbox(
-            "Select player",
-            options=[""] + all_players,
-            key=f"player_select_{row_index}",
-            label_visibility="collapsed",
-            index=0
+    # Year input (if not easy mode)
+    if not st.session_state.easy_mode:
+        year_input = st.number_input(
+            "Year",
+            min_value=year_start or 1999,
+            max_value=year_end or 2024,
+            value=year_end or 2024,
+            key=f"year_input_{row_index}",
+            label_visibility="collapsed"
         )
-        
-        if not st.session_state.easy_mode:
-            year_input = st.number_input(
-                "Year",
-                min_value=year_start or 1999,
-                max_value=year_end or 2024,
-                value=year_end or 2024,
-                key=f"year_input_{row_index}",
-                label_visibility="collapsed"
-            )
-        else:
-            year_input = None
-        
-        if st.button("Submit", key=f"submit_{row_index}", type="primary"):
-            submit_player(row_index, player_input, year_input)
+    else:
+        year_input = None
+    
+    # Submit button - full width
+    if st.button("Submit", key=f"submit_{row_index}", type="primary", use_container_width=True):
+        submit_player(row_index, player_input, year_input)
 
 
 def submit_player(row_index: int, player_name: str, year: int = None):
@@ -712,7 +723,6 @@ def submit_player(row_index: int, player_name: str, year: int = None):
             year = best_year_data['season']
         else:
             st.error(f"Could not find {player_name} matching the criteria")
-            st.experimental_rerun()
             return
     
     # Validate submission
@@ -722,7 +732,6 @@ def submit_player(row_index: int, player_name: str, year: int = None):
     
     if not is_valid:
         st.error(error_msg)
-        st.experimental_rerun()
         return
     
     # Score the submission
@@ -732,18 +741,15 @@ def submit_player(row_index: int, player_name: str, year: int = None):
     st.session_state.submissions[row_index] = player_data
     st.session_state.scores[row_index] = score_data
     
-    # Show success message
-    tier = score_data['tier']
-    st.success(f"✓ {player_data['player']} ({year}) - {score_data['score']:,.0f} pts - {TIER_EMOJIS.get(tier, '')} {tier.upper()}")
-    
-    st.experimental_rerun()
+    # Rerun to show updated state
+    st.rerun()
 
 
 def render_footer():
     """Render footer with Easy Mode toggle and How to Play"""
     st.markdown("---")
     
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2 = st.columns(2)
     
     with col1:
         easy_mode = st.checkbox("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
@@ -751,14 +757,13 @@ def render_footer():
             st.session_state.easy_mode = easy_mode
     
     with col2:
-        if st.button("❓ How to Play"):
+        if st.button("❓ How to Play", use_container_width=True):
             st.session_state.show_how_to_play = True
     
-    with col3:
-        # Check if game is complete
-        if all(s is not None for s in st.session_state.submissions):
-            if st.button("📤 Share Score", type="primary"):
-                share_score()
+    # Share button if game is complete
+    if all(s is not None for s in st.session_state.submissions):
+        if st.button("📤 Share Score", type="primary", use_container_width=True):
+            share_score()
 
 
 def share_score():
@@ -803,7 +808,7 @@ def render_how_to_play():
             
             if st.button("Close"):
                 st.session_state.show_how_to_play = False
-                st.experimental_rerun()
+                st.rerun()
 
 
 def main():
@@ -819,7 +824,6 @@ def main():
     # Render game rows
     for i in range(5):
         render_game_row(i)
-        st.markdown("")
     
     render_footer()
     render_how_to_play()
