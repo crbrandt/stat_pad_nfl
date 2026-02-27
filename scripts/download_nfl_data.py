@@ -26,6 +26,25 @@ OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'nfl_player_stats.parquet')
 
 # nflverse data URLs
 PLAYER_STATS_URL = "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_{year}.parquet"
+PLAYERS_URL = "https://github.com/nflverse/nflverse-data/releases/download/players/players.parquet"
+
+
+def download_players_data() -> pl.DataFrame:
+    """Download player metadata including headshot URLs"""
+    print("Downloading player metadata (headshots, IDs)...", end=" ", flush=True)
+    
+    try:
+        response = requests.get(PLAYERS_URL, timeout=60)
+        if response.status_code == 200:
+            df = pl.read_parquet(BytesIO(response.content))
+            print(f"✓ {len(df)} players")
+            return df
+        else:
+            print(f"✗ HTTP {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"✗ {e}")
+        return None
 
 
 def download_year_stats(year: int) -> pl.DataFrame:
@@ -236,6 +255,38 @@ def main():
     
     # Sort by season descending, then player
     df = df.sort(['season', 'player'], descending=[True, False])
+    
+    # Download and merge player metadata (headshots)
+    print("\nDownloading player metadata...")
+    players_df = download_players_data()
+    
+    if players_df is not None:
+        # Select relevant columns from players data
+        # Note: nflverse uses 'headshot' not 'headshot_url'
+        player_cols = ['display_name', 'headshot', 'gsis_id', 'espn_id']
+        available_player_cols = [c for c in player_cols if c in players_df.columns]
+        
+        if 'display_name' in available_player_cols:
+            players_subset = players_df.select(available_player_cols)
+            
+            # Rename columns for consistency
+            rename_map = {'display_name': 'player_lookup'}
+            if 'headshot' in players_subset.columns:
+                rename_map['headshot'] = 'headshot_url'
+            players_subset = players_subset.rename(rename_map)
+            
+            # Join on player name
+            df = df.join(
+                players_subset,
+                left_on='player',
+                right_on='player_lookup',
+                how='left'
+            )
+            
+            # Count how many headshots we got
+            if 'headshot_url' in df.columns:
+                headshot_count = df.filter(pl.col('headshot_url').is_not_null() & (pl.col('headshot_url') != '')).height
+                print(f"  Matched {headshot_count:,} player-seasons with headshots")
     
     # Save to parquet
     print(f"\nSaving to {OUTPUT_FILE}...")

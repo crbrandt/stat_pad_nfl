@@ -573,26 +573,32 @@ def render_completed_row(row_index: int, submission: dict, score_data: dict, cri
         player_name = submission.get('player', 'Unknown') if submission else 'Unknown'
         season = submission.get('season', '') if submission else ''
         team = submission.get('team', 'N/A') if submission else 'N/A'
+        headshot_url = submission.get('headshot_url') if submission else None
+        
+        # Fallback headshot if none available
+        if not headshot_url:
+            headshot_url = "https://a.espncdn.com/combiner/i?img=/i/headshots/nophoto.png&w=350&h=254"
         
         # Get criteria display text
         criteria_text = format_criteria_display(criteria)
         qualifier_key = criteria.get('qualifier')
         qualifier_value = submission.get('qualifier_value') if submission else None
 
-        # Mobile-friendly completed row card with criteria shown
+        # Mobile-friendly completed row card with headshot
         st.markdown(f"""
         <div class="completed-card" style="
             background: linear-gradient(90deg, {tier_color}33 0%, {tier_color}11 50%, transparent 100%);
             border-left: 4px solid {tier_color};
         ">
             <div style="font-size: 0.7rem; color: #888; margin-bottom: 4px;">{criteria_text}</div>
-            <div class="completed-card-content">
-                <div class="player-info-compact">
+            <div class="completed-card-content" style="display: flex; align-items: center; gap: 12px;">
+                <img src="{headshot_url}" style="width: 55px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0;" onerror="this.src='https://a.espncdn.com/combiner/i?img=/i/headshots/nophoto.png&w=350&h=254'">
+                <div class="player-info-compact" style="flex: 1; min-width: 0;">
                     <span style="font-size: 1.2rem;">{tier_emoji}</span>
                     <span style="font-weight: bold;">{player_name}</span>
                     <span style="color: #888;">({season})</span>
                 </div>
-                <div class="player-score-compact">
+                <div class="player-score-compact" style="text-align: right; flex-shrink: 0;">
                     <span style="font-size: 1.2rem; font-weight: bold; color: {tier_color};">{score:,.0f}</span>
                     <span style="color: #888; font-size: 0.75rem;"> pts</span>
                     <span style="color: #666; font-size: 0.65rem; margin-left: 8px;">{percentile:.0f}%</span>

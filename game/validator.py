@@ -258,6 +258,7 @@ def validate_player_submission(
         'stat_value': float(stat_value),
         'player_id': player_row.get('player_id'),
         'espn_id': player_row.get('espn_id'),
+        'headshot_url': player_row.get('headshot_url'),
         'qualifier_value': qualifier_value,
     }
     
@@ -341,6 +342,7 @@ def find_player_best_year(
         'stat_value': float(best_row[stat_category]),
         'player_id': best_row.get('player_id'),
         'espn_id': best_row.get('espn_id'),
+        'headshot_url': best_row.get('headshot_url'),
     }
 
 
