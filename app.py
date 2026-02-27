@@ -650,13 +650,27 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
     else:
         year_display = ""
     
-    # Row header with logo and info (using HTML for mobile control)
-    logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
+    # Build logo HTML based on type (single, division, conference, league)
+    if logo_info['type'] == 'division' and len(logo_info.get('urls', [])) == 4:
+        # Show all 4 division team logos in a 2x2 grid
+        logos = logo_info['urls']
+        logo_html = f"""
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 60px; height: 60px; flex-shrink: 0;">
+            <img src="{logos[0]}" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.style.display='none'">
+            <img src="{logos[1]}" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.style.display='none'">
+            <img src="{logos[2]}" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.style.display='none'">
+            <img src="{logos[3]}" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.style.display='none'">
+        </div>
+        """
+    else:
+        # Single logo (team, conference, or league)
+        logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
+        logo_html = f'<img src="{logo_url}" class="row-logo" onerror="this.style.display=\'none\'">'
     
     st.markdown(f"""
     <div class="row-card">
         <div class="row-header">
-            <img src="{logo_url}" class="row-logo" onerror="this.style.display='none'">
+            {logo_html}
             <div class="row-info">
                 <div class="row-years">{year_display}</div>
                 <div class="row-criteria">{criteria_text}</div>
