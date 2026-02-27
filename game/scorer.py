@@ -177,7 +177,7 @@ def generate_share_text(
     puzzle: Dict,
     submissions: List[Dict],
     total_score: float,
-    app_url: str = "nfl-statpad.streamlit.app"
+    app_url: str = "statpadnfl.streamlit.app"
 ) -> str:
     """
     Generate shareable text with emoji tiers
