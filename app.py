@@ -606,16 +606,29 @@ def load_custom_css():
             font-size: 1rem;
         }
         
-        /* KEEP horizontal layout on mobile - prevent stacking */
+        /* FORCE horizontal layout on mobile - override Streamlit defaults */
         [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
-            gap: 3px !important;
+            gap: 4px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
         }
         
+        /* Force columns to share width equally */
         [data-testid="column"] {
             min-width: 0 !important;
-            flex: 1 1 0 !important;
+            max-width: none !important;
+            width: auto !important;
+            flex: 1 1 0% !important;
             padding: 0 !important;
+        }
+        
+        /* Override any Streamlit column width calculations */
+        [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+            flex-basis: 0 !important;
+            flex-grow: 1 !important;
+            flex-shrink: 1 !important;
         }
         
         /* Compact the stats header on mobile */
@@ -631,13 +644,17 @@ def load_custom_css():
         /* Compact row cells on mobile */
         .main .block-container {
             padding: 0.5rem 0.5rem 1rem 0.5rem !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
         }
         
         /* Smaller row cells on mobile */
         .row-cell {
             height: 60px;
             min-height: 60px;
-            padding: 6px;
+            padding: 4px;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
         
         .cell-logo {
@@ -734,7 +751,7 @@ def load_custom_css():
         .row-cell {
             height: 50px;
             min-height: 50px;
-            padding: 4px;
+            padding: 3px;
         }
         
         .cell-logo {
@@ -789,6 +806,68 @@ def load_custom_css():
         
         .stat-box {
             min-width: 50px;
+        }
+    }
+    
+    /* Extra small screens (very narrow phones) */
+    @media (max-width: 380px) {
+        /* Force even tighter layout */
+        [data-testid="stHorizontalBlock"] {
+            gap: 1px !important;
+        }
+        
+        .row-cell {
+            height: 45px;
+            min-height: 45px;
+            padding: 2px;
+            border-radius: 4px;
+        }
+        
+        .cell-logo {
+            width: 22px;
+            height: 22px;
+        }
+        
+        .division-grid {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .division-logo {
+            width: 11px;
+            height: 11px;
+        }
+        
+        .year-single {
+            font-size: 0.75rem;
+        }
+        
+        .year-num {
+            font-size: 0.6rem;
+        }
+        
+        .year-to {
+            font-size: 0.4rem;
+        }
+        
+        .qualifier-text {
+            font-size: 0.5rem;
+        }
+        
+        .qualifier-badge {
+            font-size: 0.3rem;
+            padding: 1px 2px;
+        }
+        
+        .criteria-text {
+            font-size: 0.45rem;
+        }
+        
+        [data-testid="column"]:last-child .stButton > button {
+            height: 45px !important;
+            min-height: 45px !important;
+            font-size: 0.5rem !important;
+            padding: 1px !important;
         }
     }
     </style>
