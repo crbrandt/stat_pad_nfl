@@ -1351,13 +1351,9 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
             badge_text = "SAME SEASON"
             badge_bg = "#4ade80"
         
-        # Build qualifier HTML - simplified structure
+        # Build qualifier HTML - single line to avoid rendering issues
         label_div = f'<div class="grid-qualifier-label">{label_text}</div>' if label_text else ''
-        qualifier_html = f'''<div class="grid-qualifier-content">
-            {label_div}
-            <div class="grid-qualifier-text">{display_text}</div>
-            <div class="grid-qualifier-badge" style="background:{badge_bg};">{badge_text}</div>
-        </div>'''
+        qualifier_html = f'<div class="grid-qualifier-content">{label_div}<div class="grid-qualifier-text">{display_text}</div><div class="grid-qualifier-badge" style="background:{badge_bg};">{badge_text}</div></div>'
     else:
         # No qualifier - show team/division/conference/position info
         criteria_parts = []
