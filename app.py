@@ -508,12 +508,12 @@ def load_custom_css():
         }
         
         .team-logo, .row-logo {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
         }
         
         .year-value {
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
         
         .player-name {
@@ -524,11 +524,15 @@ def load_custom_css():
             font-size: 1rem;
         }
         
-        /* Make columns stack better on mobile */
+        /* KEEP horizontal layout on mobile - prevent stacking */
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+            gap: 4px !important;
+        }
+        
         [data-testid="column"] {
-            width: 100% !important;
-            flex: 1 1 auto !important;
             min-width: 0 !important;
+            flex: 1 1 0 !important;
         }
         
         /* Compact the stats header on mobile */
@@ -558,6 +562,22 @@ def load_custom_css():
         
         .player-info-compact {
             font-size: 0.85rem;
+        }
+        
+        /* Even more compact on very small screens */
+        .team-logo, .row-logo {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .year-value {
+            font-size: 0.8rem;
+        }
+        
+        /* Smaller row cells on mobile */
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) .stButton > button {
+            min-height: 70px !important;
+            font-size: 0.8rem !important;
         }
     }
     </style>

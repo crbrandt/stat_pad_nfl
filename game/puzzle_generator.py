@@ -306,6 +306,52 @@ def get_daily_puzzle() -> Dict:
     return generate_puzzle(today)
 
 
+def update_puzzle_row(puzzle_date: date, row_index: int, new_criteria: Dict) -> Dict:
+    """
+    Update a single row in a puzzle without affecting other rows.
+    If no override exists, creates one from the generated puzzle.
+    
+    Args:
+        puzzle_date: The date of the puzzle to update
+        row_index: Index of the row to update (0-4)
+        new_criteria: New criteria for the row
+    
+    Returns:
+        The updated puzzle config
+    """
+    # Get existing override or generate the puzzle
+    existing = get_override(puzzle_date)
+    if existing:
+        puzzle = existing.copy()
+        puzzle['rows'] = existing['rows'].copy()
+    else:
+        puzzle = generate_puzzle(puzzle_date)
+    
+    # Update the specific row
+    if 0 <= row_index < len(puzzle['rows']):
+        puzzle['rows'][row_index] = new_criteria
+    
+    # Save as override
+    save_override(puzzle_date, puzzle)
+    
+    return puzzle
+
+
+def get_current_puzzle_for_editing(puzzle_date: date = None) -> Dict:
+    """
+    Get the current puzzle for editing purposes.
+    Returns the override if it exists, otherwise the generated puzzle.
+    """
+    if puzzle_date is None:
+        puzzle_date = get_puzzle_date()
+    
+    override = get_override(puzzle_date)
+    if override:
+        return override
+    
+    return generate_puzzle(puzzle_date)
+
+
 if __name__ == "__main__":
     # Test puzzle generation
     print("Testing puzzle generator...")

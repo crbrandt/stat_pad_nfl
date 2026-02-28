@@ -11,7 +11,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import STAT_CATEGORIES, NFL_TEAMS, DIVISIONS, CONFERENCES, STAT_QUALIFIERS, get_compatible_qualifiers
-from game.puzzle_generator import save_override, load_overrides, get_puzzle_date
+from game.puzzle_generator import (
+    save_override, load_overrides, get_puzzle_date, 
+    update_puzzle_row, get_current_puzzle_for_editing, format_criteria_display
+)
 
 st.set_page_config(
     page_title="NFL StatPad - Admin",
@@ -217,3 +220,187 @@ if overrides:
                 st.rerun()
 else:
     st.info("No overrides configured")
+
+
+# Individual Row Editing Section
+st.header("✏️ Edit Individual Row (Today's Puzzle)")
+st.markdown("Edit a single row without changing the rest of the puzzle")
+
+# Get current puzzle for today
+today = get_puzzle_date()
+current_puzzle = get_current_puzzle_for_editing(today)
+
+st.subheader(f"Current Puzzle: {current_puzzle['stat_display']} ({current_puzzle['stat_type']})")
+
+# Show current rows with edit buttons
+for row_idx, row in enumerate(current_puzzle['rows']):
+    col_display, col_edit = st.columns([3, 1])
+    
+    with col_display:
+        criteria_text = format_criteria_display(row)
+        qualifier_text = f" | Qualifier: {row.get('qualifier_display', 'None')}" if row.get('qualifier') else ""
+        st.markdown(f"**Row {row_idx + 1}:** {criteria_text}{qualifier_text}")
+    
+    with col_edit:
+        if st.button(f"Edit Row {row_idx + 1}", key=f"edit_row_{row_idx}"):
+            st.session_state[f'editing_row_{row_idx}'] = True
+
+# Edit forms for each row
+for row_idx in range(5):
+    if st.session_state.get(f'editing_row_{row_idx}', False):
+        st.markdown("---")
+        st.subheader(f"✏️ Editing Row {row_idx + 1}")
+        
+        current_row = current_puzzle['rows'][row_idx]
+        
+        # Get compatible qualifiers for current stat category
+        edit_compatible_qualifiers = get_compatible_qualifiers(current_puzzle['stat_category'])
+        edit_qualifier_options = {"none": "No Qualifier"}
+        for q_key in edit_compatible_qualifiers:
+            q_info = STAT_QUALIFIERS.get(q_key, {})
+            q_display = q_info.get('display', q_key)
+            q_type = q_info.get('qualifier_type', 'same_season')
+            type_label = " (Career)" if q_type == 'career' else ""
+            edit_qualifier_options[q_key] = f"{q_display}{type_label}"
+        
+        # Determine current criteria type
+        if current_row.get('team'):
+            default_type = "team"
+        elif current_row.get('division'):
+            default_type = "division"
+        elif current_row.get('conference'):
+            default_type = "conference"
+        elif current_row.get('position'):
+            default_type = "position"
+        else:
+            default_type = "qualifier_only"
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            edit_criteria_type = st.selectbox(
+                "Criteria Type",
+                options=["team", "division", "conference", "position", "qualifier_only"],
+                format_func=lambda x: {
+                    "team": "🏟️ Team",
+                    "division": "📍 Division", 
+                    "conference": "🏈 Conference",
+                    "position": "👤 Position",
+                    "qualifier_only": "📊 Qualifier Only"
+                }.get(x, x),
+                index=["team", "division", "conference", "position", "qualifier_only"].index(default_type),
+                key=f"edit_criteria_type_{row_idx}"
+            )
+        
+        with col2:
+            if edit_criteria_type == "team":
+                team_options = {k: v['name'] for k, v in NFL_TEAMS.items()}
+                default_team = current_row.get('team', list(NFL_TEAMS.keys())[0])
+                edit_criteria_value = st.selectbox(
+                    "Team",
+                    options=list(team_options.keys()),
+                    format_func=lambda x: team_options[x],
+                    index=list(team_options.keys()).index(default_team) if default_team in team_options else 0,
+                    key=f"edit_team_{row_idx}"
+                )
+            elif edit_criteria_type == "division":
+                default_div = current_row.get('division', DIVISIONS[0])
+                edit_criteria_value = st.selectbox(
+                    "Division",
+                    options=DIVISIONS,
+                    index=DIVISIONS.index(default_div) if default_div in DIVISIONS else 0,
+                    key=f"edit_division_{row_idx}"
+                )
+            elif edit_criteria_type == "conference":
+                default_conf = current_row.get('conference', CONFERENCES[0])
+                edit_criteria_value = st.selectbox(
+                    "Conference",
+                    options=CONFERENCES,
+                    index=CONFERENCES.index(default_conf) if default_conf in CONFERENCES else 0,
+                    key=f"edit_conference_{row_idx}"
+                )
+            elif edit_criteria_type == "position":
+                current_stat_info = STAT_CATEGORIES[current_puzzle['stat_category']]
+                default_pos = current_row.get('position', current_stat_info['eligible_positions'][0])
+                edit_criteria_value = st.selectbox(
+                    "Position",
+                    options=current_stat_info['eligible_positions'],
+                    index=current_stat_info['eligible_positions'].index(default_pos) if default_pos in current_stat_info['eligible_positions'] else 0,
+                    key=f"edit_position_{row_idx}"
+                )
+            else:
+                edit_criteria_value = None
+        
+        col3, col4, col5 = st.columns(3)
+        
+        with col3:
+            edit_year_start = st.number_input(
+                "Year Start",
+                min_value=1999,
+                max_value=2024,
+                value=current_row.get('year_start', 2015),
+                key=f"edit_year_start_{row_idx}"
+            )
+        
+        with col4:
+            edit_year_end = st.number_input(
+                "Year End",
+                min_value=1999,
+                max_value=2024,
+                value=current_row.get('year_end', 2024),
+                key=f"edit_year_end_{row_idx}"
+            )
+        
+        with col5:
+            current_qualifier = current_row.get('qualifier', 'none') or 'none'
+            edit_selected_qualifier = st.selectbox(
+                "Qualifier",
+                options=list(edit_qualifier_options.keys()),
+                format_func=lambda x: edit_qualifier_options[x],
+                index=list(edit_qualifier_options.keys()).index(current_qualifier) if current_qualifier in edit_qualifier_options else 0,
+                key=f"edit_qualifier_{row_idx}"
+            )
+        
+        # Save/Cancel buttons
+        col_save, col_cancel = st.columns(2)
+        
+        with col_save:
+            if st.button(f"💾 Save Row {row_idx + 1}", key=f"save_row_{row_idx}", type="primary"):
+                # Build new criteria
+                new_criteria = {
+                    'team': None,
+                    'year_start': edit_year_start,
+                    'year_end': edit_year_end,
+                    'position': None,
+                    'division': None,
+                    'conference': None,
+                    'qualifier': None,
+                    'qualifier_type': None,
+                    'qualifier_display': None,
+                }
+                
+                if edit_criteria_type == "team":
+                    new_criteria['team'] = edit_criteria_value
+                elif edit_criteria_type == "division":
+                    new_criteria['division'] = edit_criteria_value
+                elif edit_criteria_type == "conference":
+                    new_criteria['conference'] = edit_criteria_value
+                elif edit_criteria_type == "position":
+                    new_criteria['position'] = edit_criteria_value
+                
+                if edit_selected_qualifier != "none":
+                    q_info = STAT_QUALIFIERS.get(edit_selected_qualifier, {})
+                    new_criteria['qualifier'] = edit_selected_qualifier
+                    new_criteria['qualifier_type'] = q_info.get('qualifier_type', 'same_season')
+                    new_criteria['qualifier_display'] = q_info.get('display', edit_selected_qualifier)
+                
+                # Update just this row
+                update_puzzle_row(today, row_idx, new_criteria)
+                st.session_state[f'editing_row_{row_idx}'] = False
+                st.success(f"✓ Row {row_idx + 1} updated!")
+                st.rerun()
+        
+        with col_cancel:
+            if st.button(f"Cancel", key=f"cancel_row_{row_idx}"):
+                st.session_state[f'editing_row_{row_idx}'] = False
+                st.rerun()
