@@ -1692,12 +1692,13 @@ def main():
     init_session_state()
     
     render_header()
+    
+    # Easy Mode toggle centered beneath the title
+    render_easy_mode_toggle()
+    
     render_stats_header()
     
     st.markdown("---")
-    
-    # Easy Mode toggle centered above game rows
-    render_easy_mode_toggle()
     
     # Render game rows
     for i in range(5):
