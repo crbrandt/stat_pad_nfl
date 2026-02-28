@@ -493,6 +493,88 @@ def load_custom_css():
         margin: 12px 0 !important;
     }
     
+    /* Row cell styling - responsive */
+    .row-cell {
+        background: #3a3a3a;
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 80px;
+        min-height: 80px;
+    }
+    
+    .cell-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+    }
+    
+    .division-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2px;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .division-logo {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+    
+    .year-single {
+        font-size: 1.3rem;
+        font-weight: bold;
+    }
+    
+    .year-range-display {
+        text-align: center;
+    }
+    
+    .year-num {
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+    
+    .year-to {
+        font-size: 0.6rem;
+        color: #888;
+    }
+    
+    .qualifier-content {
+        text-align: center;
+    }
+    
+    .qualifier-label {
+        font-size: 0.6rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+    
+    .qualifier-text {
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .qualifier-badge {
+        color: #000;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.5rem;
+        font-weight: bold;
+        margin-top: 3px;
+        display: inline-block;
+    }
+    
+    .criteria-text {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #ccc;
+    }
+    
     /* Mobile-specific styles */
     @media (max-width: 768px) {
         .game-title {
@@ -527,12 +609,13 @@ def load_custom_css():
         /* KEEP horizontal layout on mobile - prevent stacking */
         [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
-            gap: 4px !important;
+            gap: 3px !important;
         }
         
         [data-testid="column"] {
             min-width: 0 !important;
             flex: 1 1 0 !important;
+            padding: 0 !important;
         }
         
         /* Compact the stats header on mobile */
@@ -544,40 +627,168 @@ def load_custom_css():
         .stat-box {
             min-width: 60px;
         }
+        
+        /* Compact row cells on mobile */
+        .main .block-container {
+            padding: 0.5rem 0.5rem 1rem 0.5rem !important;
+        }
+        
+        /* Smaller row cells on mobile */
+        .row-cell {
+            height: 60px;
+            min-height: 60px;
+            padding: 6px;
+        }
+        
+        .cell-logo {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .division-grid {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .division-logo {
+            width: 17px;
+            height: 17px;
+        }
+        
+        .year-single {
+            font-size: 1rem;
+        }
+        
+        .year-num {
+            font-size: 0.85rem;
+        }
+        
+        .year-to {
+            font-size: 0.5rem;
+        }
+        
+        .qualifier-text {
+            font-size: 0.7rem;
+        }
+        
+        .qualifier-badge {
+            font-size: 0.4rem;
+            padding: 1px 4px;
+        }
+        
+        .qualifier-label {
+            font-size: 0.5rem;
+        }
+        
+        .criteria-text {
+            font-size: 0.65rem;
+        }
+        
+        /* Make the green button smaller on mobile */
+        [data-testid="column"]:last-child .stButton > button {
+            height: 60px !important;
+            min-height: 60px !important;
+            font-size: 0.7rem !important;
+            padding: 4px !important;
+        }
     }
     
-    /* Very small screens */
+    /* Very small screens (phones) */
     @media (max-width: 480px) {
         .game-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
         
         .stat-value {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+        }
+        
+        .stat-label {
+            font-size: 0.5rem;
         }
         
         .completed-card {
-            padding: 8px 10px;
+            padding: 6px 8px;
         }
         
         .player-info-compact {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
         }
         
         /* Even more compact on very small screens */
         .team-logo, .row-logo {
+            width: 25px !important;
+            height: 25px !important;
+        }
+        
+        .year-value {
+            font-size: 0.7rem;
+        }
+        
+        /* Tighter gaps */
+        [data-testid="stHorizontalBlock"] {
+            gap: 2px !important;
+        }
+        
+        /* Even smaller row cells on very small screens */
+        .row-cell {
+            height: 50px;
+            min-height: 50px;
+            padding: 4px;
+        }
+        
+        .cell-logo {
+            width: 28px;
+            height: 28px;
+        }
+        
+        .division-grid {
             width: 30px;
             height: 30px;
         }
         
-        .year-value {
-            font-size: 0.8rem;
+        .division-logo {
+            width: 14px;
+            height: 14px;
+        }
+        
+        .year-single {
+            font-size: 0.85rem;
+        }
+        
+        .year-num {
+            font-size: 0.7rem;
+        }
+        
+        .qualifier-text {
+            font-size: 0.6rem;
+        }
+        
+        .qualifier-badge {
+            font-size: 0.35rem;
+            padding: 1px 3px;
+        }
+        
+        .criteria-text {
+            font-size: 0.55rem;
         }
         
         /* Smaller row cells on mobile */
-        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) .stButton > button {
-            min-height: 70px !important;
-            font-size: 0.8rem !important;
+        [data-testid="column"]:last-child .stButton > button {
+            height: 50px !important;
+            min-height: 50px !important;
+            font-size: 0.6rem !important;
+            padding: 2px !important;
+        }
+        
+        /* Compact stats header */
+        .stats-header {
+            padding: 8px;
+            gap: 3px;
+        }
+        
+        .stat-box {
+            min-width: 50px;
         }
     }
     </style>
@@ -926,25 +1137,25 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
     # Build logo HTML based on type (single, division, conference, league)
     if logo_info['type'] == 'division' and len(logo_info.get('urls', [])) == 4:
         logos = logo_info['urls']
-        logo_html = f'''<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 60px; height: 60px;">
-            <img src="{logos[0]}" style="width: 28px; height: 28px; object-fit: contain;">
-            <img src="{logos[1]}" style="width: 28px; height: 28px; object-fit: contain;">
-            <img src="{logos[2]}" style="width: 28px; height: 28px; object-fit: contain;">
-            <img src="{logos[3]}" style="width: 28px; height: 28px; object-fit: contain;">
+        logo_html = f'''<div class="division-grid">
+            <img src="{logos[0]}" class="division-logo">
+            <img src="{logos[1]}" class="division-logo">
+            <img src="{logos[2]}" class="division-logo">
+            <img src="{logos[3]}" class="division-logo">
         </div>'''
     else:
         logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
-        logo_html = f'<img src="{logo_url}" style="width: 60px; height: 60px; object-fit: contain;">'
+        logo_html = f'<img src="{logo_url}" class="cell-logo">'
     
     # Year display with "to" format
     if year_start and year_end:
         if year_start == year_end:
-            year_html = f'<div style="font-size: 1.4rem; font-weight: bold;">{year_start}</div>'
+            year_html = f'<div class="year-single">{year_start}</div>'
         else:
-            year_html = f'''<div style="text-align: center;">
-                <div style="font-size: 1.2rem; font-weight: bold;">{year_start}</div>
-                <div style="font-size: 0.7rem; color: #888;">to</div>
-                <div style="font-size: 1.2rem; font-weight: bold;">{year_end}</div>
+            year_html = f'''<div class="year-range-display">
+                <div class="year-num">{year_start}</div>
+                <div class="year-to">to</div>
+                <div class="year-num">{year_end}</div>
             </div>'''
     else:
         year_html = ''
@@ -966,8 +1177,8 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
             badge_bg = "#4ade80"
         
         # Build qualifier HTML - simplified structure
-        label_div = f'<div style="font-size:0.65rem;color:#888;text-transform:uppercase;">{label_text}</div>' if label_text else ''
-        qualifier_html = f'<div style="text-align:center;">{label_div}<div style="font-size:1rem;font-weight:bold;">{display_text}</div><div style="background:{badge_bg};color:#000;padding:2px 8px;border-radius:3px;font-size:0.6rem;font-weight:bold;margin-top:4px;display:inline-block;">{badge_text}</div></div>'
+        label_div = f'<div class="qualifier-label">{label_text}</div>' if label_text else ''
+        qualifier_html = f'<div class="qualifier-content">{label_div}<div class="qualifier-text">{display_text}</div><div class="qualifier-badge" style="background:{badge_bg};">{badge_text}</div></div>'
     else:
         # No qualifier - show team/division/conference/position info
         criteria_parts = []
@@ -982,33 +1193,33 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
             criteria_parts.append(criteria['position'])
         
         if criteria_parts:
-            qualifier_html = f'<div style="text-align: center; font-size: 0.9rem; color: #ccc;">{", ".join(criteria_parts)}</div>'
+            qualifier_html = f'<div class="criteria-text">{", ".join(criteria_parts)}</div>'
         else:
             qualifier_html = ''
     
     # Row container with spacing
-    st.markdown(f'<div style="margin-bottom: 15px;">', unsafe_allow_html=True)
+    st.markdown(f'<div style="margin-bottom: 10px;">', unsafe_allow_html=True)
     
     # Use Streamlit columns for the 4-cell layout with clickable button
     col1, col2, col3, col4 = st.columns([1, 0.8, 2, 1])
     
     with col1:
         st.markdown(f'''
-        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; height: 90px;">
+        <div class="row-cell">
             {logo_html}
         </div>
         ''', unsafe_allow_html=True)
     
     with col2:
         st.markdown(f'''
-        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; height: 90px;">
+        <div class="row-cell">
             {year_html}
         </div>
         ''', unsafe_allow_html=True)
     
     with col3:
         st.markdown(f'''
-        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; height: 90px;">
+        <div class="row-cell">
             {qualifier_html}
         </div>
         ''', unsafe_allow_html=True)
