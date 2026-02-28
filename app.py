@@ -1010,19 +1010,20 @@ def init_session_state():
 
 
 def render_header():
-    """Render the game header with Easy Mode toggle"""
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        st.markdown("""
-        <div class="game-header" style="border-bottom: none; padding-bottom: 0;">
-            <h1 class="game-title"><span class="game-title-accent">StatPad</span> - NFL 🏈</h1>
-        </div>
-        """, unsafe_allow_html=True)
-    
+    """Render the game header"""
+    st.markdown("""
+    <div class="game-header" style="border-bottom: none; padding-bottom: 0;">
+        <h1 class="game-title"><span class="game-title-accent">StatPad</span> - NFL 🏈</h1>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_easy_mode_toggle():
+    """Render the Easy Mode toggle centered above the game rows"""
+    # Center the checkbox using columns
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)  # Spacer
-        easy_mode = st.checkbox("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_header")
+        easy_mode = st.checkbox("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
         if easy_mode != st.session_state.easy_mode:
             st.session_state.easy_mode = easy_mode
             st.rerun()
@@ -1694,6 +1695,9 @@ def main():
     render_stats_header()
     
     st.markdown("---")
+    
+    # Easy Mode toggle centered above game rows
+    render_easy_mode_toggle()
     
     # Render game rows
     for i in range(5):
