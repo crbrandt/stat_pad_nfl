@@ -575,6 +575,100 @@ def load_custom_css():
         color: #ccc;
     }
     
+    /* CSS Grid-based game row - for mobile compatibility */
+    .game-row-grid {
+        display: grid;
+        grid-template-columns: 1fr 0.8fr 2fr;
+        gap: 8px;
+        margin-bottom: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .grid-cell {
+        background: #3a3a3a;
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70px;
+    }
+    
+    .grid-logo {
+        width: 45px;
+        height: 45px;
+        object-fit: contain;
+    }
+    
+    .grid-division-logos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .grid-div-logo {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+    }
+    
+    .grid-year-single {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fff;
+    }
+    
+    .grid-year-range {
+        text-align: center;
+    }
+    
+    .grid-year-num {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #fff;
+    }
+    
+    .grid-year-to {
+        font-size: 0.55rem;
+        color: #888;
+    }
+    
+    .grid-qualifier-content {
+        text-align: center;
+    }
+    
+    .grid-qualifier-label {
+        font-size: 0.55rem;
+        color: #888;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+    
+    .grid-qualifier-text {
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: #fff;
+    }
+    
+    .grid-qualifier-badge {
+        color: #000;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.45rem;
+        font-weight: bold;
+        margin-top: 4px;
+        display: inline-block;
+    }
+    
+    .grid-criteria-text {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #ccc;
+    }
+    
     /* Mobile-specific styles */
     @media (max-width: 768px) {
         .game-title {
@@ -1213,30 +1307,30 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
 
 
 def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
-    """Render an input row for player submission - 4-cell layout matching StatPad design"""
+    """Render an input row for player submission - CSS Grid layout for mobile compatibility"""
     
     # Build logo HTML based on type (single, division, conference, league)
     if logo_info['type'] == 'division' and len(logo_info.get('urls', [])) == 4:
         logos = logo_info['urls']
-        logo_html = f'''<div class="division-grid">
-            <img src="{logos[0]}" class="division-logo">
-            <img src="{logos[1]}" class="division-logo">
-            <img src="{logos[2]}" class="division-logo">
-            <img src="{logos[3]}" class="division-logo">
+        logo_html = f'''<div class="grid-division-logos">
+            <img src="{logos[0]}" class="grid-div-logo">
+            <img src="{logos[1]}" class="grid-div-logo">
+            <img src="{logos[2]}" class="grid-div-logo">
+            <img src="{logos[3]}" class="grid-div-logo">
         </div>'''
     else:
         logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
-        logo_html = f'<img src="{logo_url}" class="cell-logo">'
+        logo_html = f'<img src="{logo_url}" class="grid-logo">'
     
     # Year display with "to" format
     if year_start and year_end:
         if year_start == year_end:
-            year_html = f'<div class="year-single">{year_start}</div>'
+            year_html = f'<div class="grid-year-single">{year_start}</div>'
         else:
-            year_html = f'''<div class="year-range-display">
-                <div class="year-num">{year_start}</div>
-                <div class="year-to">to</div>
-                <div class="year-num">{year_end}</div>
+            year_html = f'''<div class="grid-year-range">
+                <div class="grid-year-num">{year_start}</div>
+                <div class="grid-year-to">to</div>
+                <div class="grid-year-num">{year_end}</div>
             </div>'''
     else:
         year_html = ''
@@ -1258,8 +1352,12 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
             badge_bg = "#4ade80"
         
         # Build qualifier HTML - simplified structure
-        label_div = f'<div class="qualifier-label">{label_text}</div>' if label_text else ''
-        qualifier_html = f'<div class="qualifier-content">{label_div}<div class="qualifier-text">{display_text}</div><div class="qualifier-badge" style="background:{badge_bg};">{badge_text}</div></div>'
+        label_div = f'<div class="grid-qualifier-label">{label_text}</div>' if label_text else ''
+        qualifier_html = f'''<div class="grid-qualifier-content">
+            {label_div}
+            <div class="grid-qualifier-text">{display_text}</div>
+            <div class="grid-qualifier-badge" style="background:{badge_bg};">{badge_text}</div>
+        </div>'''
     else:
         # No qualifier - show team/division/conference/position info
         criteria_parts = []
@@ -1274,78 +1372,37 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
             criteria_parts.append(criteria['position'])
         
         if criteria_parts:
-            qualifier_html = f'<div class="criteria-text">{", ".join(criteria_parts)}</div>'
+            qualifier_html = f'<div class="grid-criteria-text">{", ".join(criteria_parts)}</div>'
         else:
             qualifier_html = ''
     
-    # Row container with spacing
-    st.markdown(f'<div style="margin-bottom: 10px;">', unsafe_allow_html=True)
-    
-    # Use Streamlit columns for the 4-cell layout with clickable button
-    col1, col2, col3, col4 = st.columns([1, 0.8, 2, 1])
-    
-    with col1:
-        st.markdown(f'''
-        <div class="row-cell">
+    # Render the entire row as a CSS Grid HTML element (first 3 cells)
+    # The button will be rendered separately by Streamlit
+    st.markdown(f'''
+    <div class="game-row-grid">
+        <div class="grid-cell grid-cell-logo">
             {logo_html}
         </div>
-        ''', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f'''
-        <div class="row-cell">
+        <div class="grid-cell grid-cell-year">
             {year_html}
         </div>
-        ''', unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f'''
-        <div class="row-cell">
+        <div class="grid-cell grid-cell-qualifier">
             {qualifier_html}
         </div>
-        ''', unsafe_allow_html=True)
+    </div>
+    ''', unsafe_allow_html=True)
     
-    with col4:
-        # Get filtered players for this row
-        puzzle = st.session_state.puzzle
-        stat_category = puzzle['stat_category']
-        filtered_players = get_filtered_players_for_criteria(criteria, stat_category)
-        
-        # Green "➕ add player" button - clicking it opens the centered dialog
-        # Wrap in a container that matches the other cells' height
-        st.markdown('''
-        <style>
-        /* Force the 4th column button to match cell height */
-        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) {
-            display: flex !important;
-            align-items: stretch !important;
-        }
-        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) > div {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: stretch !important;
-            flex: 1 !important;
-        }
-        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) > div > div {
-            display: flex !important;
-            flex: 1 !important;
-        }
-        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) .stButton {
-            display: flex !important;
-            flex: 1 !important;
-        }
-        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) .stButton > button {
-            flex: 1 !important;
-            height: auto !important;
-            min-height: 90px !important;
-        }
-        </style>
-        ''', unsafe_allow_html=True)
-        
-        if st.button("➕ add player", key=f"add_player_btn_{row_index}", use_container_width=True):
-            show_player_dialog(row_index, criteria, filtered_players, year_start, year_end)
+    # Get filtered players for this row
+    puzzle = st.session_state.puzzle
+    stat_category = puzzle['stat_category']
+    filtered_players = get_filtered_players_for_criteria(criteria, stat_category)
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Green "➕ add player" button - rendered by Streamlit below the grid
+    if st.button("➕ add player", key=f"add_player_btn_{row_index}", use_container_width=True):
+        show_player_dialog(row_index, criteria, filtered_players, year_start, year_end)
+    
+    # Add spacing after the row
+    st.markdown('<div style="margin-bottom: 15px;"></div>', unsafe_allow_html=True)
 
 
 def render_player_modal():
