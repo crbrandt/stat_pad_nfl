@@ -448,6 +448,9 @@ def init_session_state():
     if 'show_how_to_play' not in st.session_state:
         st.session_state.show_how_to_play = False
     
+    if 'show_faq' not in st.session_state:
+        st.session_state.show_faq = False
+    
     if 'expanded_rows' not in st.session_state:
         st.session_state.expanded_rows = [False] * 5
     
@@ -788,16 +791,22 @@ def submit_player(row_index: int, player_name: str, year: int = None):
 
 
 def render_footer():
-    """Render footer with How to Play and Share buttons"""
+    """Render footer with How to Play, FAQ, and Share buttons"""
     st.markdown("---")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         if st.button("❓ How to Play", use_container_width=True):
             st.session_state.show_how_to_play = True
+            st.session_state.show_faq = False
     
     with col2:
+        if st.button("📊 FAQ", use_container_width=True):
+            st.session_state.show_faq = True
+            st.session_state.show_how_to_play = False
+    
+    with col3:
         # Share button if game is complete
         if all(s is not None for s in st.session_state.submissions):
             if st.button("📤 Share Score", type="primary", use_container_width=True):
@@ -861,6 +870,67 @@ def render_how_to_play():
                 st.rerun()
 
 
+def render_faq():
+    """Render FAQ modal with fantasy scoring explanation"""
+    if st.session_state.show_faq:
+        with st.expander("FAQ", expanded=True):
+            st.markdown("""
+            ## 📊 Frequently Asked Questions
+            
+            ### How are Fantasy Points calculated?
+            
+            Fantasy Points use **ESPN Standard Scoring**:
+            
+            | Category | Points |
+            |----------|--------|
+            | **Passing Yards** | 1 pt per 25 yards (0.04/yard) |
+            | **Passing TDs** | 4 pts each |
+            | **Interceptions** | -2 pts each |
+            | **Rushing Yards** | 1 pt per 10 yards (0.1/yard) |
+            | **Rushing TDs** | 6 pts each |
+            | **Receiving Yards** | 1 pt per 10 yards (0.1/yard) |
+            | **Receiving TDs** | 6 pts each |
+            | **Fumbles Lost** | -2 pts each |
+            | **2-Point Conversions** | 2 pts each |
+            
+            *Note: This is non-PPR (no points per reception).*
+            
+            ---
+            
+            ### What years are included?
+            
+            The database includes NFL player statistics from **1999 to 2024**.
+            
+            ---
+            
+            ### How are percentiles calculated?
+            
+            Your answer is compared against all valid players who meet the row's criteria. 
+            The percentile shows where your answer ranks (100% = best possible answer).
+            
+            ---
+            
+            ### What qualifiers are available?
+            
+            Some rows have additional qualifiers like:
+            - **Pro Bowl** - Player made the Pro Bowl that season
+            - **All-Pro** - Player was named All-Pro that season
+            - **Rushing Attempts** - Minimum rushing attempts
+            - **Targets** - Minimum receiving targets
+            - **Pass Attempts** - Minimum pass attempts
+            
+            ---
+            
+            ### Can I play previous days' puzzles?
+            
+            Currently, only the daily puzzle is available. Each day at midnight PST, a new puzzle is generated.
+            """)
+            
+            if st.button("Close FAQ"):
+                st.session_state.show_faq = False
+                st.rerun()
+
+
 def main():
     """Main application entry point"""
     load_custom_css()
@@ -877,6 +947,7 @@ def main():
     
     render_footer()
     render_how_to_play()
+    render_faq()
 
 
 if __name__ == "__main__":
