@@ -606,29 +606,21 @@ def load_custom_css():
             font-size: 1rem;
         }
         
-        /* FORCE horizontal layout on mobile - override Streamlit defaults */
+        /* FORCE horizontal layout on mobile - each column gets 25% width */
         [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
-            gap: 4px !important;
+            gap: 3px !important;
             width: 100% !important;
-            max-width: 100% !important;
-            overflow: hidden !important;
         }
         
-        /* Force columns to share width equally */
+        /* Force columns to exactly 25% width each */
         [data-testid="column"] {
             min-width: 0 !important;
-            max-width: none !important;
-            width: auto !important;
-            flex: 1 1 0% !important;
+            width: 25% !important;
+            max-width: 25% !important;
+            flex: 0 0 25% !important;
             padding: 0 !important;
-        }
-        
-        /* Override any Streamlit column width calculations */
-        [data-testid="stHorizontalBlock"] > [data-testid="column"] {
-            flex-basis: 0 !important;
-            flex-grow: 1 !important;
-            flex-shrink: 1 !important;
+            box-sizing: border-box !important;
         }
         
         /* Compact the stats header on mobile */
@@ -645,7 +637,6 @@ def load_custom_css():
         .main .block-container {
             padding: 0.5rem 0.5rem 1rem 0.5rem !important;
             max-width: 100% !important;
-            overflow-x: hidden !important;
         }
         
         /* Smaller row cells on mobile */
