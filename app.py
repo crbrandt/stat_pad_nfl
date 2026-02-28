@@ -59,6 +59,19 @@ def load_custom_css():
         max-width: 100vw !important;
     }
     
+    /* Constrain all horizontal blocks to viewport width */
+    [data-testid="stHorizontalBlock"] {
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Constrain all columns to not overflow */
+    [data-testid="column"] {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
     /* Override Streamlit's default background */
     .main .block-container {
         background-color: #2d2d2d !important;
