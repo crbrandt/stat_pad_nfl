@@ -1069,6 +1069,7 @@ def render_stats_header():
     total_guesses = st.session_state.total_guesses
     
     # Use HTML for better mobile control
+    # Add ID to guess count for JavaScript updates
     score_display = f"{total_score:,.0f}" if total_score == int(total_score) else f"{total_score:,.1f}"
     
     st.markdown(f"""
@@ -1078,11 +1079,11 @@ def render_stats_header():
             <div class="stat-label">CATEGORY ({puzzle['stat_type']})</div>
         </div>
         <div class="stat-box">
-            <div class="stat-value">{score_display}</div>
+            <div class="stat-value" id="total-score-display">{score_display}</div>
             <div class="stat-label">TOTAL SCORE</div>
         </div>
         <div class="stat-box">
-            <div class="stat-value">{total_guesses}</div>
+            <div class="stat-value" id="guess-count-display">{total_guesses}</div>
             <div class="stat-label">GUESSES</div>
         </div>
     </div>
@@ -1344,9 +1345,20 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
                     # Close dialog and refresh
                     st.rerun()
                 else:
-                    # Show error in the placeholder with guess count info (dialog stays open)
+                    # Show error in the placeholder (dialog stays open)
                     # The guess count was already incremented in submit_player_with_feedback
-                    error_placeholder.error(f"{error_msg}\n\n_(Guess #{st.session_state.total_guesses} counted)_")
+                    error_placeholder.error(error_msg)
+                    
+                    # Inject JavaScript to update the guess count on the main page
+                    st.markdown(f"""
+                    <script>
+                        // Update the guess count display on the main page
+                        var guessDisplay = document.getElementById('guess-count-display');
+                        if (guessDisplay) {{
+                            guessDisplay.textContent = '{st.session_state.total_guesses}';
+                        }}
+                    </script>
+                    """, unsafe_allow_html=True)
             else:
                 error_placeholder.error("Please select a player")
 
