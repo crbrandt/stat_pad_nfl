@@ -20,7 +20,8 @@ from config import (
 
 # Data file path
 DATA_DIR = os.path.dirname(__file__)
-PLAYER_STATS_FILE = os.path.join(DATA_DIR, 'nfl_player_stats.csv')
+PLAYER_STATS_PARQUET = os.path.join(DATA_DIR, 'nfl_player_stats.parquet')
+PLAYER_STATS_CSV = os.path.join(DATA_DIR, 'nfl_player_stats.csv')
 
 # Cache for loaded data
 _player_database_cache = None
@@ -36,7 +37,7 @@ def normalize_team_abbr(team: str) -> str:
 
 def load_player_database() -> pl.DataFrame:
     """
-    Load the player database from CSV file
+    Load the player database from parquet file (preferred) or CSV fallback
     
     Returns:
         Polars DataFrame with player stats
@@ -46,18 +47,29 @@ def load_player_database() -> pl.DataFrame:
     if _player_database_cache is not None:
         return _player_database_cache
     
-    if os.path.exists(PLAYER_STATS_FILE):
+    # Prefer parquet file (has ESPN IDs and headshot URLs)
+    if os.path.exists(PLAYER_STATS_PARQUET):
         try:
-            df = pl.read_csv(PLAYER_STATS_FILE)
-            print(f"✓ Loaded player database: {len(df):,} records, {df['player'].n_unique():,} players")
+            df = pl.read_parquet(PLAYER_STATS_PARQUET)
+            print(f"✓ Loaded player database (parquet): {len(df):,} records, {df['player'].n_unique():,} players")
+            _player_database_cache = df
+            return df
+        except Exception as e:
+            print(f"⚠ Error loading parquet file: {e}")
+    
+    # Fallback to CSV
+    if os.path.exists(PLAYER_STATS_CSV):
+        try:
+            df = pl.read_csv(PLAYER_STATS_CSV)
+            print(f"✓ Loaded player database (CSV): {len(df):,} records, {df['player'].n_unique():,} players")
             _player_database_cache = df
             return df
         except Exception as e:
             print(f"⚠ Error loading CSV file: {e}")
     
-    # Fallback to sample data if CSV doesn't exist
+    # Fallback to sample data if neither file exists
     print("⚠ Player stats file not found, using sample data")
-    print(f"  Expected: {PLAYER_STATS_FILE}")
+    print(f"  Expected: {PLAYER_STATS_PARQUET}")
     print("  Run: python scripts/download_nfl_data.py to generate")
     
     df = create_sample_data()
