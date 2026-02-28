@@ -1308,6 +1308,15 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
     """Show centered dialog for player selection"""
     st.markdown("**Select a player to submit**")
     
+    # Initialize error state for this dialog
+    error_key = f"dialog_error_{row_index}"
+    if error_key not in st.session_state:
+        st.session_state[error_key] = None
+    
+    # Show any existing error message at the top
+    if st.session_state[error_key]:
+        st.error(st.session_state[error_key])
+    
     # Player search/select
     player_input = st.selectbox(
         "Player",
@@ -1334,10 +1343,23 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
     with col1:
         if st.button("Submit", key=f"dialog_submit_{row_index}", type="primary", use_container_width=True):
             if player_input:
-                submit_player(row_index, player_input, year_input)
-                st.rerun()
+                # Clear previous error
+                st.session_state[error_key] = None
+                
+                # Try to submit and capture any error
+                success, error_msg = submit_player_with_feedback(row_index, player_input, year_input)
+                
+                if success:
+                    # Clear error and close dialog
+                    st.session_state[error_key] = None
+                    st.rerun()
+                else:
+                    # Store error and rerun to show it in the dialog
+                    st.session_state[error_key] = error_msg
+                    st.rerun()
             else:
-                st.error("Please select a player")
+                st.session_state[error_key] = "Please select a player"
+                st.rerun()
 
 
 def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
@@ -1531,11 +1553,13 @@ def render_player_modal():
     st.markdown("---")
 
 
-def submit_player(row_index: int, player_name: str, year: int = None):
-    """Handle player submission"""
+def submit_player_with_feedback(row_index: int, player_name: str, year: int = None) -> tuple:
+    """
+    Handle player submission and return success/error status.
+    Returns: (success: bool, error_message: str or None)
+    """
     if not player_name:
-        st.error("Please enter a player name")
-        return
+        return False, "Please enter a player name"
     
     puzzle = st.session_state.puzzle
     criteria = puzzle['rows'][row_index]
@@ -1551,8 +1575,21 @@ def submit_player(row_index: int, player_name: str, year: int = None):
         if best_year_data:
             year = best_year_data['season']
         else:
-            st.error(f"Could not find {player_name} matching the criteria")
-            return
+            # Build a descriptive error message for easy mode
+            error_parts = [f"❌ {player_name} does not meet the criteria:"]
+            if criteria.get('team'):
+                team_name = NFL_TEAMS.get(criteria['team'], {}).get('name', criteria['team'])
+                error_parts.append(f"• Must have played for {team_name}")
+            if criteria.get('division'):
+                error_parts.append(f"• Must have played in {criteria['division']}")
+            if criteria.get('conference'):
+                error_parts.append(f"• Must have played in {criteria['conference']}")
+            if criteria.get('year_start') and criteria.get('year_end'):
+                error_parts.append(f"• Must have played between {criteria['year_start']}-{criteria['year_end']}")
+            if criteria.get('qualifier'):
+                qualifier_info = STAT_QUALIFIERS.get(criteria['qualifier'], {})
+                error_parts.append(f"• Must meet qualifier: {qualifier_info.get('display', criteria['qualifier'])}")
+            return False, "\n".join(error_parts)
     
     # Validate submission
     is_valid, player_data, error_msg = validate_player_submission(
@@ -1560,8 +1597,9 @@ def submit_player(row_index: int, player_name: str, year: int = None):
     )
     
     if not is_valid:
-        st.error(error_msg)
-        return
+        # Enhance error message with more context
+        enhanced_error = f"❌ {error_msg}"
+        return False, enhanced_error
     
     # Score the submission
     score_data = score_submission(df, player_data, stat_category, criteria)
@@ -1569,6 +1607,17 @@ def submit_player(row_index: int, player_name: str, year: int = None):
     # Update session state
     st.session_state.submissions[row_index] = player_data
     st.session_state.scores[row_index] = score_data
+    
+    return True, None
+
+
+def submit_player(row_index: int, player_name: str, year: int = None):
+    """Handle player submission (legacy function for modal)"""
+    success, error_msg = submit_player_with_feedback(row_index, player_name, year)
+    
+    if not success:
+        st.error(error_msg)
+        return
     
     # Rerun to show updated state
     st.rerun()
