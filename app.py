@@ -1025,6 +1025,14 @@ def init_session_state():
     if 'active_modal_row' not in st.session_state:
         st.session_state.active_modal_row = None
     
+    # Dialog error state - stores error message to show when dialog re-opens
+    if 'dialog_error' not in st.session_state:
+        st.session_state.dialog_error = None
+    
+    # Dialog row to re-open after error
+    if 'dialog_reopen_row' not in st.session_state:
+        st.session_state.dialog_reopen_row = None
+    
     # Ensure expanded_rows has correct length
     if len(st.session_state.expanded_rows) < 5:
         st.session_state.expanded_rows = [False] * 5
@@ -1309,8 +1317,12 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
     """Show centered dialog for player selection"""
     st.markdown("**Select a player to submit**")
     
-    # Create a placeholder for error messages at the top
-    error_placeholder = st.empty()
+    # Show any stored error from previous submission attempt
+    if st.session_state.dialog_error and st.session_state.dialog_reopen_row == row_index:
+        st.error(st.session_state.dialog_error)
+        # Clear the error after displaying
+        st.session_state.dialog_error = None
+        st.session_state.dialog_reopen_row = None
     
     # Player search/select
     player_input = st.selectbox(
@@ -1334,33 +1346,23 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
         st.info("Easy Mode: Best year will be auto-selected")
     
     # Submit button
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Submit", key=f"dialog_submit_{row_index}", type="primary", use_container_width=True):
-            if player_input:
-                # Try to submit and capture any error
-                success, error_msg = submit_player_with_feedback(row_index, player_input, year_input)
-                
-                if success:
-                    # Close dialog and refresh
-                    st.rerun()
-                else:
-                    # Show error in the placeholder (dialog stays open)
-                    # The guess count was already incremented in submit_player_with_feedback
-                    error_placeholder.error(error_msg)
-                    
-                    # Inject JavaScript to update the guess count on the main page
-                    st.markdown(f"""
-                    <script>
-                        // Update the guess count display on the main page
-                        var guessDisplay = document.getElementById('guess-count-display');
-                        if (guessDisplay) {{
-                            guessDisplay.textContent = '{st.session_state.total_guesses}';
-                        }}
-                    </script>
-                    """, unsafe_allow_html=True)
+    if st.button("Submit", key=f"dialog_submit_{row_index}", type="primary", use_container_width=True):
+        if player_input:
+            # Try to submit and capture any error
+            success, error_msg = submit_player_with_feedback(row_index, player_input, year_input)
+            
+            if success:
+                # Clear any stored error and close dialog
+                st.session_state.dialog_error = None
+                st.session_state.dialog_reopen_row = None
+                st.rerun()
             else:
-                error_placeholder.error("Please select a player")
+                # Store error and row index, then rerun to update main page AND re-open dialog
+                st.session_state.dialog_error = error_msg
+                st.session_state.dialog_reopen_row = row_index
+                st.rerun()
+        else:
+            st.error("Please select a player")
 
 
 def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
@@ -1450,8 +1452,12 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
     stat_category = puzzle['stat_category']
     filtered_players = get_filtered_players_for_criteria(criteria, stat_category)
     
+    # Check if we need to re-open the dialog for this row (after an error)
+    should_reopen = (st.session_state.dialog_reopen_row == row_index and 
+                     st.session_state.dialog_error is not None)
+    
     # Green "➕ add player" button - rendered by Streamlit below the grid
-    if st.button("➕ add player", key=f"add_player_btn_{row_index}", use_container_width=True):
+    if st.button("➕ add player", key=f"add_player_btn_{row_index}", use_container_width=True) or should_reopen:
         show_player_dialog(row_index, criteria, filtered_players, year_start, year_end)
     
     # Add spacing after the row
