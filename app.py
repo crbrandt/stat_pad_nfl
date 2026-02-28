@@ -380,7 +380,7 @@ def load_custom_css():
     
     /* Modern Streamlit button styling - touch friendly */
     .stButton > button {
-        background-color: #4ade80 !important;
+        background-color: #b7a57a !important;
         color: #000 !important;
         border: none !important;
         border-radius: 10px !important;
@@ -393,7 +393,7 @@ def load_custom_css():
     }
     
     .stButton > button:hover {
-        background-color: #22c55e !important;
+        background-color: #a89463 !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
     }
@@ -402,12 +402,13 @@ def load_custom_css():
         transform: translateY(0) !important;
     }
     
-    /* Primary button variant */
+    /* Primary button variant (Submit buttons) */
     .stButton > button[kind="primary"] {
-        background-color: #4ade80 !important;
+        background-color: #b7a57a !important;
+        color: #000 !important;
     }
     
-    /* Secondary/default buttons */
+    /* Secondary/default buttons (How to Play, FAQ) */
     .stButton > button[kind="secondary"],
     .stButton > button:not([kind="primary"]) {
         background-color: #4a4a4a !important;
@@ -897,10 +898,10 @@ def submit_player(row_index: int, player_name: str, year: int = None):
 
 
 def render_footer():
-    """Render footer with How to Play, FAQ, and Share buttons"""
+    """Render footer with How to Play and FAQ buttons"""
     st.markdown("---")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
         if st.button("❓ How to Play", use_container_width=True):
@@ -911,12 +912,6 @@ def render_footer():
         if st.button("📊 FAQ", use_container_width=True):
             st.session_state.show_faq = True
             st.session_state.show_how_to_play = False
-    
-    with col3:
-        # Share button if game is complete
-        if all(s is not None for s in st.session_state.submissions):
-            if st.button("📤 Share Score", type="primary", use_container_width=True):
-                share_score()
     
     # Attribution footer
     st.markdown("""
@@ -1037,6 +1032,14 @@ def render_faq():
                 st.rerun()
 
 
+def render_share_button():
+    """Render Share Score button immediately after game completion"""
+    if all(s is not None for s in st.session_state.submissions):
+        st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
+        if st.button("📤 Share Score", type="primary", use_container_width=True, key="share_main"):
+            share_score()
+
+
 def main():
     """Main application entry point"""
     load_custom_css()
@@ -1050,6 +1053,9 @@ def main():
     # Render game rows
     for i in range(5):
         render_game_row(i)
+    
+    # Share button immediately after game rows
+    render_share_button()
     
     render_footer()
     render_how_to_play()
