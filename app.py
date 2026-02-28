@@ -50,6 +50,13 @@ def load_custom_css():
         background-color: #2d2d2d !important;
         color: #ffffff;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        overflow-x: hidden !important;
+    }
+    
+    /* Prevent horizontal scroll globally */
+    html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
     }
     
     /* Override Streamlit's default background */
@@ -57,6 +64,7 @@ def load_custom_css():
         background-color: #2d2d2d !important;
         padding: 1rem 1rem 2rem 1rem !important;
         max-width: 100% !important;
+        overflow-x: hidden !important;
     }
     
     /* Header styling - modern and compact */
@@ -86,7 +94,7 @@ def load_custom_css():
         padding: 16px;
         background: #3a3a3a;
         border-radius: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 5px;
         flex-wrap: wrap;
         gap: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -1020,16 +1028,25 @@ def render_header():
 
 def render_easy_mode_toggle():
     """Render the Easy Mode toggle as a centered on/off switch beneath the stats header"""
-    # Use st.toggle for on/off switch appearance, centered with HTML wrapper
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        # Center the toggle using a container
-        st.markdown('<div style="display: flex; justify-content: center; margin: 10px 0;">', unsafe_allow_html=True)
-        easy_mode = st.toggle("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
-        st.markdown('</div>', unsafe_allow_html=True)
-        if easy_mode != st.session_state.easy_mode:
-            st.session_state.easy_mode = easy_mode
-            st.rerun()
+    # Use CSS to center the toggle properly
+    st.markdown('''
+    <style>
+    /* Center the Easy Mode toggle */
+    [data-testid="stHorizontalBlock"]:has([data-testid="stToggle"]) {
+        justify-content: center !important;
+    }
+    div[data-testid="stToggle"] {
+        display: flex;
+        justify-content: center;
+    }
+    </style>
+    ''', unsafe_allow_html=True)
+    
+    # Render toggle with minimal margin
+    easy_mode = st.toggle("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
+    if easy_mode != st.session_state.easy_mode:
+        st.session_state.easy_mode = easy_mode
+        st.rerun()
 
 
 def render_stats_header():
