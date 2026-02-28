@@ -802,6 +802,18 @@ def render_footer():
         if all(s is not None for s in st.session_state.submissions):
             if st.button("📤 Share Score", type="primary", use_container_width=True):
                 share_score()
+    
+    # Attribution footer
+    st.markdown("""
+    <div style="text-align: center; margin-top: 30px; padding: 15px 0; border-top: 1px solid #333;">
+        <p style="color: #888; font-size: 0.8rem; margin: 0;">
+            Made by <strong style="color: #f39c12;">Cole Brandt</strong> • 
+            <a href="https://github.com/crbrandt/stat_pad_nfl" target="_blank" style="color: #4ade80; text-decoration: none;">
+                GitHub 🔗
+            </a>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def share_score():
