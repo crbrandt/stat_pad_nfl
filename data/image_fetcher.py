@@ -25,7 +25,8 @@ TEAM_LOGO_URL_SMALL = "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/{tea
 # Conference logos
 AFC_LOGO_URL = "https://a.espncdn.com/i/teamlogos/nfl/500/afc.png"
 NFC_LOGO_URL = "https://a.espncdn.com/i/teamlogos/nfl/500/nfc.png"
-NFL_LOGO_URL = "https://a.espncdn.com/i/teamlogos/nfl/500/nfl.png"
+# NFL shield logo - using a reliable source
+NFL_LOGO_URL = "https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg"
 
 # Division to teams mapping
 DIVISION_TEAMS = {

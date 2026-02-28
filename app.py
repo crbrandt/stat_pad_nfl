@@ -408,6 +408,21 @@ def load_custom_css():
         color: #000 !important;
     }
     
+    /* Green "Add Player" button styling */
+    /* Target buttons that contain "add player" text in the last column */
+    [data-testid="column"]:last-child .stButton > button {
+        background-color: #22c55e !important;
+        color: #000 !important;
+        height: 90px !important;
+        min-height: 90px !important;
+        font-size: 1rem !important;
+        border-radius: 8px !important;
+    }
+    
+    [data-testid="column"]:last-child .stButton > button:hover {
+        background-color: #16a34a !important;
+    }
+    
     /* Secondary/default buttons (How to Play, FAQ) */
     .stButton > button[kind="secondary"],
     .stButton > button:not([kind="primary"]) {
@@ -418,6 +433,17 @@ def load_custom_css():
     .stButton > button[kind="secondary"]:hover,
     .stButton > button:not([kind="primary"]):hover {
         background-color: #5a5a5a !important;
+    }
+    
+    /* Modal/Dialog styling */
+    [data-testid="stModal"] {
+        background-color: rgba(0, 0, 0, 0.7) !important;
+    }
+    
+    [data-testid="stModal"] > div {
+        background-color: #2d2d2d !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
     }
     
     /* Selectbox styling */
@@ -567,6 +593,10 @@ def init_session_state():
     if 'player_db' not in st.session_state:
         with st.spinner("Loading player database..."):
             st.session_state.player_db = get_player_database()
+    
+    # Modal state for player selection
+    if 'active_modal_row' not in st.session_state:
+        st.session_state.active_modal_row = None
     
     # Ensure expanded_rows has correct length
     if len(st.session_state.expanded_rows) < 5:
@@ -832,6 +862,44 @@ def get_filtered_players_for_criteria(criteria: dict, stat_category: str) -> lis
     return sorted([p for p in players if p is not None])
 
 
+# Dialog function for player selection (centered modal)
+@st.dialog("Add Player")
+def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, year_start: int, year_end: int):
+    """Show centered dialog for player selection"""
+    st.markdown("**Select a player to submit**")
+    
+    # Player search/select
+    player_input = st.selectbox(
+        "Player",
+        options=[""] + filtered_players,
+        key=f"dialog_player_{row_index}",
+        index=0
+    )
+    
+    # Year input (if not easy mode)
+    if not st.session_state.easy_mode:
+        year_input = st.number_input(
+            "Year",
+            min_value=year_start or 1999,
+            max_value=year_end or 2024,
+            value=year_end or 2024,
+            key=f"dialog_year_{row_index}"
+        )
+    else:
+        year_input = None
+        st.info("Easy Mode: Best year will be auto-selected")
+    
+    # Submit button
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Submit", key=f"dialog_submit_{row_index}", type="primary", use_container_width=True):
+            if player_input:
+                submit_player(row_index, player_input, year_input)
+                st.rerun()
+            else:
+                st.error("Please select a player")
+
+
 def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
     """Render an input row for player submission - 4-cell layout matching StatPad design"""
     
@@ -868,22 +936,18 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
         qualifier_type = qualifier_info.get('qualifier_type', 'same_season')
         display_text = qualifier_info.get('display', qualifier_key)
         
-        # Parse display text for label and value
-        # e.g., "1000+ Rush Yards" -> label="", value="1000+ Rush Yards"
-        # e.g., "Top 10 Fantasy QB" -> label="", value="Top 10 Fantasy QB"
-        
         if qualifier_type == 'career':
             label_text = "CAREER"
-            badge_html = '<div style="background: #b7a57a; color: #000; padding: 2px 8px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; margin-top: 4px; display: inline-block;">ANYTIME IN CAREER</div>'
+            badge_text = "ANYTIME IN CAREER"
+            badge_bg = "#b7a57a"
         else:
             label_text = ""
-            badge_html = '<div style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; margin-top: 4px; display: inline-block;">SAME SEASON</div>'
+            badge_text = "SAME SEASON"
+            badge_bg = "#4ade80"
         
-        qualifier_html = f'''<div style="text-align: center;">
-            {f'<div style="font-size: 0.65rem; color: #888; text-transform: uppercase;">{label_text}</div>' if label_text else ''}
-            <div style="font-size: 1rem; font-weight: bold;">{display_text}</div>
-            {badge_html}
-        </div>'''
+        # Build qualifier HTML - simplified structure
+        label_div = f'<div style="font-size:0.65rem;color:#888;text-transform:uppercase;">{label_text}</div>' if label_text else ''
+        qualifier_html = f'<div style="text-align:center;">{label_div}<div style="font-size:1rem;font-weight:bold;">{display_text}</div><div style="background:{badge_bg};color:#000;padding:2px 8px;border-radius:3px;font-size:0.6rem;font-weight:bold;margin-top:4px;display:inline-block;">{badge_text}</div></div>'
     else:
         # No qualifier - show team/division/conference/position info
         criteria_parts = []
@@ -902,64 +966,170 @@ def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start
         else:
             qualifier_html = ''
     
-    # Render the 4-cell row using HTML
-    st.markdown(f'''
-    <div style="display: flex; gap: 3px; margin-bottom: 8px;">
-        <!-- Cell 1: Logo -->
-        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-width: 90px;">
+    # Row container with spacing
+    st.markdown(f'<div style="margin-bottom: 15px;">', unsafe_allow_html=True)
+    
+    # Use Streamlit columns for the 4-cell layout with clickable button
+    col1, col2, col3, col4 = st.columns([1, 0.8, 2, 1])
+    
+    with col1:
+        st.markdown(f'''
+        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; height: 90px;">
             {logo_html}
         </div>
-        <!-- Cell 2: Years -->
-        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-width: 80px;">
+        ''', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f'''
+        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; height: 90px;">
             {year_html}
         </div>
-        <!-- Cell 3: Qualifier/Criteria -->
-        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; flex: 1;">
+        ''', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f'''
+        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; height: 90px;">
             {qualifier_html}
         </div>
-        <!-- Cell 4: Add Player Button (placeholder - actual button below) -->
-        <div id="add-player-cell-{row_index}" style="background: #4ade80; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-width: 120px; cursor: pointer;">
-            <div style="text-align: center; color: #000;">
-                <div style="font-size: 1.8rem; font-weight: bold;">+</div>
-                <div style="font-size: 0.75rem; font-weight: 600;">add player</div>
-            </div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
+        ''', unsafe_allow_html=True)
     
-    # Player selection area (hidden by default, shown when clicking add player)
-    # For now, show it inline below the row
-    stat_category = st.session_state.puzzle['stat_category']
+    with col4:
+        # Get filtered players for this row
+        puzzle = st.session_state.puzzle
+        stat_category = puzzle['stat_category']
+        filtered_players = get_filtered_players_for_criteria(criteria, stat_category)
+        
+        # Green "➕ add player" button - clicking it opens the centered dialog
+        # Wrap in a container that matches the other cells' height
+        st.markdown('''
+        <style>
+        /* Force the 4th column button to match cell height */
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) {
+            display: flex !important;
+            align-items: stretch !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) > div {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: stretch !important;
+            flex: 1 !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) > div > div {
+            display: flex !important;
+            flex: 1 !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) .stButton {
+            display: flex !important;
+            flex: 1 !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(4) .stButton > button {
+            flex: 1 !important;
+            height: auto !important;
+            min-height: 90px !important;
+        }
+        </style>
+        ''', unsafe_allow_html=True)
+        
+        if st.button("➕ add player", key=f"add_player_btn_{row_index}", use_container_width=True):
+            show_player_dialog(row_index, criteria, filtered_players, year_start, year_end)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+def render_player_modal():
+    """Render the player selection modal overlay"""
+    if st.session_state.active_modal_row is None:
+        return
+    
+    row_index = st.session_state.active_modal_row
+    puzzle = st.session_state.puzzle
+    criteria = puzzle['rows'][row_index]
+    stat_category = puzzle['stat_category']
+    year_start = criteria.get('year_start', 1999)
+    year_end = criteria.get('year_end', 2024)
+    
+    # Get filtered players
     filtered_players = get_filtered_players_for_criteria(criteria, stat_category)
     
-    with st.expander("Select Player", expanded=False):
-        player_input = st.selectbox(
-            "Player",
-            options=[""] + filtered_players,
-            key=f"player_select_{row_index}",
-            label_visibility="collapsed",
-            index=0
+    # Modal container with dark overlay styling
+    st.markdown("""
+    <style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9998;
+    }
+    .modal-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #2d2d2d;
+        border-radius: 12px;
+        padding: 20px;
+        z-index: 9999;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fff;
+        letter-spacing: 1px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Create modal UI using Streamlit components
+    st.markdown("---")
+    st.markdown("### ADD PLAYER")
+    
+    col1, col2 = st.columns([4, 1])
+    with col2:
+        if st.button("✕ Close", key="close_modal"):
+            st.session_state.active_modal_row = None
+            st.rerun()
+    
+    # Player search/select
+    player_input = st.selectbox(
+        "Select a player",
+        options=[""] + filtered_players,
+        key=f"modal_player_select_{row_index}",
+        index=0
+    )
+    
+    # Year input (if not easy mode)
+    if not st.session_state.easy_mode:
+        year_input = st.number_input(
+            "Year",
+            min_value=year_start or 1999,
+            max_value=year_end or 2024,
+            value=year_end or 2024,
+            key=f"modal_year_input_{row_index}"
         )
-        
-        # Year input (if not easy mode)
-        if not st.session_state.easy_mode:
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                year_input = st.number_input(
-                    "Year",
-                    min_value=year_start or 1999,
-                    max_value=year_end or 2024,
-                    value=year_end or 2024,
-                    key=f"year_input_{row_index}",
-                    label_visibility="collapsed"
-                )
-            with col2:
-                if st.button("Submit", key=f"submit_{row_index}", type="primary", use_container_width=True):
-                    submit_player(row_index, player_input, year_input)
+    else:
+        year_input = None
+    
+    # Submit button
+    if st.button("Submit", key=f"modal_submit_{row_index}", type="primary", use_container_width=True):
+        if player_input:
+            submit_player(row_index, player_input, year_input)
+            st.session_state.active_modal_row = None
         else:
-            year_input = None
-            if st.button("Submit", key=f"submit_{row_index}", type="primary", use_container_width=True):
-                submit_player(row_index, player_input, year_input)
+            st.error("Please select a player")
+    
+    st.markdown("---")
 
 
 def submit_player(row_index: int, player_name: str, year: int = None):
@@ -1077,6 +1247,8 @@ def render_how_to_play():
             if st.button("Close"):
                 st.session_state.show_how_to_play = False
                 st.rerun()
+                st.rerun()
+            st.rerun()
 
 
 def render_faq():
@@ -1161,6 +1333,9 @@ def main():
     # Render game rows
     for i in range(5):
         render_game_row(i)
+    
+    # Show modal if active
+    render_player_modal()
     
     # Share button immediately after game rows
     render_share_button()
