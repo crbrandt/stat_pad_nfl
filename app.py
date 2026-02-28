@@ -798,60 +798,168 @@ def get_all_player_names():
     return sorted([p for p in all_players if p is not None])
 
 
-def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
-    """Render an input row for player submission - mobile friendly"""
+def get_filtered_players_for_criteria(criteria: dict, stat_category: str) -> list:
+    """Get player names filtered by criteria's eligible positions"""
+    df = st.session_state.player_db
+    stat_info = STAT_CATEGORIES.get(stat_category, {})
     
-    # Get criteria text
-    criteria_text = format_criteria_display(criteria)
-    
-    # Year display
-    if year_start and year_end:
-        if year_start == year_end:
-            year_display = f"{year_start}"
+    # Determine eligible positions from qualifier or stat category
+    qualifier_key = criteria.get('qualifier')
+    if qualifier_key:
+        qualifier_info = STAT_QUALIFIERS.get(qualifier_key, {})
+        # Fantasy rank qualifiers have a specific position
+        if qualifier_info.get('type') == 'fantasy_rank':
+            eligible_positions = [qualifier_info.get('position')]
         else:
-            year_display = f"{year_start}-{year_end}"
+            eligible_positions = qualifier_info.get('eligible_positions', stat_info.get('eligible_positions', []))
     else:
-        year_display = ""
+        eligible_positions = stat_info.get('eligible_positions', [])
+    
+    # Filter players by position if we have eligible positions
+    if eligible_positions and hasattr(df, 'filter'):
+        import polars as pl
+        filtered_df = df.filter(pl.col('position').is_in(eligible_positions))
+        players = filtered_df.select('player').unique().to_series().to_list()
+    elif eligible_positions:
+        # Pandas fallback
+        filtered_df = df[df['position'].isin(eligible_positions)]
+        players = filtered_df['player'].unique().tolist()
+    else:
+        # No filtering
+        players = get_all_player_names()
+        return players
+    
+    return sorted([p for p in players if p is not None])
+
+
+def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
+    """Render an input row for player submission - 4-cell layout matching StatPad design"""
     
     # Build logo HTML based on type (single, division, conference, league)
     if logo_info['type'] == 'division' and len(logo_info.get('urls', [])) == 4:
-        # Show all 4 division team logos in a 2x2 grid
         logos = logo_info['urls']
-        logo_html = f'<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 60px; height: 60px; flex-shrink: 0;"><img src="{logos[0]}" style="width: 28px; height: 28px; object-fit: contain;"><img src="{logos[1]}" style="width: 28px; height: 28px; object-fit: contain;"><img src="{logos[2]}" style="width: 28px; height: 28px; object-fit: contain;"><img src="{logos[3]}" style="width: 28px; height: 28px; object-fit: contain;"></div>'
+        logo_html = f'''<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 60px; height: 60px;">
+            <img src="{logos[0]}" style="width: 28px; height: 28px; object-fit: contain;">
+            <img src="{logos[1]}" style="width: 28px; height: 28px; object-fit: contain;">
+            <img src="{logos[2]}" style="width: 28px; height: 28px; object-fit: contain;">
+            <img src="{logos[3]}" style="width: 28px; height: 28px; object-fit: contain;">
+        </div>'''
     else:
-        # Single logo (team, conference, or league)
         logo_url = logo_info['urls'][0] if logo_info['urls'] else NFL_LOGO_URL
-        logo_html = f'<img src="{logo_url}" class="row-logo">'
+        logo_html = f'<img src="{logo_url}" style="width: 60px; height: 60px; object-fit: contain;">'
     
-    st.markdown(f"""<div class="row-card"><div class="row-header">{logo_html}<div class="row-info"><div class="row-years">{year_display}</div><div class="row-criteria">{criteria_text}</div></div></div></div>""", unsafe_allow_html=True)
-    
-    # Player input - full width for mobile
-    all_players = get_all_player_names()
-    
-    player_input = st.selectbox(
-        "Select player",
-        options=[""] + all_players,
-        key=f"player_select_{row_index}",
-        label_visibility="collapsed",
-        index=0
-    )
-    
-    # Year input (if not easy mode)
-    if not st.session_state.easy_mode:
-        year_input = st.number_input(
-            "Year",
-            min_value=year_start or 1999,
-            max_value=year_end or 2024,
-            value=year_end or 2024,
-            key=f"year_input_{row_index}",
-            label_visibility="collapsed"
-        )
+    # Year display with "to" format
+    if year_start and year_end:
+        if year_start == year_end:
+            year_html = f'<div style="font-size: 1.4rem; font-weight: bold;">{year_start}</div>'
+        else:
+            year_html = f'''<div style="text-align: center;">
+                <div style="font-size: 1.2rem; font-weight: bold;">{year_start}</div>
+                <div style="font-size: 0.7rem; color: #888;">to</div>
+                <div style="font-size: 1.2rem; font-weight: bold;">{year_end}</div>
+            </div>'''
     else:
-        year_input = None
+        year_html = ''
     
-    # Submit button - full width
-    if st.button("Submit", key=f"submit_{row_index}", type="primary", use_container_width=True):
-        submit_player(row_index, player_input, year_input)
+    # Qualifier display with label and career badge
+    qualifier_key = criteria.get('qualifier')
+    if qualifier_key:
+        qualifier_info = STAT_QUALIFIERS.get(qualifier_key, {})
+        qualifier_type = qualifier_info.get('qualifier_type', 'same_season')
+        display_text = qualifier_info.get('display', qualifier_key)
+        
+        # Parse display text for label and value
+        # e.g., "1000+ Rush Yards" -> label="", value="1000+ Rush Yards"
+        # e.g., "Top 10 Fantasy QB" -> label="", value="Top 10 Fantasy QB"
+        
+        if qualifier_type == 'career':
+            label_text = "CAREER"
+            badge_html = '<div style="background: #b7a57a; color: #000; padding: 2px 8px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; margin-top: 4px; display: inline-block;">ANYTIME IN CAREER</div>'
+        else:
+            label_text = ""
+            badge_html = '<div style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; margin-top: 4px; display: inline-block;">SAME SEASON</div>'
+        
+        qualifier_html = f'''<div style="text-align: center;">
+            {f'<div style="font-size: 0.65rem; color: #888; text-transform: uppercase;">{label_text}</div>' if label_text else ''}
+            <div style="font-size: 1rem; font-weight: bold;">{display_text}</div>
+            {badge_html}
+        </div>'''
+    else:
+        # No qualifier - show team/division/conference/position info
+        criteria_parts = []
+        if criteria.get('team'):
+            team_info = NFL_TEAMS.get(criteria['team'], {})
+            criteria_parts.append(team_info.get('name', criteria['team']))
+        if criteria.get('division'):
+            criteria_parts.append(criteria['division'])
+        if criteria.get('conference'):
+            criteria_parts.append(criteria['conference'])
+        if criteria.get('position'):
+            criteria_parts.append(criteria['position'])
+        
+        if criteria_parts:
+            qualifier_html = f'<div style="text-align: center; font-size: 0.9rem; color: #ccc;">{", ".join(criteria_parts)}</div>'
+        else:
+            qualifier_html = ''
+    
+    # Render the 4-cell row using HTML
+    st.markdown(f'''
+    <div style="display: flex; gap: 3px; margin-bottom: 8px;">
+        <!-- Cell 1: Logo -->
+        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-width: 90px;">
+            {logo_html}
+        </div>
+        <!-- Cell 2: Years -->
+        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-width: 80px;">
+            {year_html}
+        </div>
+        <!-- Cell 3: Qualifier/Criteria -->
+        <div style="background: #3a3a3a; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; flex: 1;">
+            {qualifier_html}
+        </div>
+        <!-- Cell 4: Add Player Button (placeholder - actual button below) -->
+        <div id="add-player-cell-{row_index}" style="background: #4ade80; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-width: 120px; cursor: pointer;">
+            <div style="text-align: center; color: #000;">
+                <div style="font-size: 1.8rem; font-weight: bold;">+</div>
+                <div style="font-size: 0.75rem; font-weight: 600;">add player</div>
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Player selection area (hidden by default, shown when clicking add player)
+    # For now, show it inline below the row
+    stat_category = st.session_state.puzzle['stat_category']
+    filtered_players = get_filtered_players_for_criteria(criteria, stat_category)
+    
+    with st.expander("Select Player", expanded=False):
+        player_input = st.selectbox(
+            "Player",
+            options=[""] + filtered_players,
+            key=f"player_select_{row_index}",
+            label_visibility="collapsed",
+            index=0
+        )
+        
+        # Year input (if not easy mode)
+        if not st.session_state.easy_mode:
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                year_input = st.number_input(
+                    "Year",
+                    min_value=year_start or 1999,
+                    max_value=year_end or 2024,
+                    value=year_end or 2024,
+                    key=f"year_input_{row_index}",
+                    label_visibility="collapsed"
+                )
+            with col2:
+                if st.button("Submit", key=f"submit_{row_index}", type="primary", use_container_width=True):
+                    submit_player(row_index, player_input, year_input)
+        else:
+            year_input = None
+            if st.button("Submit", key=f"submit_{row_index}", type="primary", use_container_width=True):
+                submit_player(row_index, player_input, year_input)
 
 
 def submit_player(row_index: int, player_name: str, year: int = None):

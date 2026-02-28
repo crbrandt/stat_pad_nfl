@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import STAT_CATEGORIES, NFL_TEAMS, DIVISIONS, CONFERENCES
+from config import STAT_CATEGORIES, NFL_TEAMS, DIVISIONS, CONFERENCES, STAT_QUALIFIERS, get_compatible_qualifiers
 from game.puzzle_generator import save_override, load_overrides, get_puzzle_date
 
 st.set_page_config(
@@ -53,29 +53,48 @@ stat_info = STAT_CATEGORIES[stat_category]
 # Row criteria
 st.header("3. Configure Row Criteria")
 
+# Get compatible qualifiers for the selected stat category
+compatible_qualifiers = get_compatible_qualifiers(stat_category)
+
+# Build qualifier options with display names
+qualifier_options = {"none": "No Qualifier"}
+for q_key in compatible_qualifiers:
+    q_info = STAT_QUALIFIERS.get(q_key, {})
+    q_display = q_info.get('display', q_key)
+    q_type = q_info.get('qualifier_type', 'same_season')
+    type_label = " (Career)" if q_type == 'career' else ""
+    qualifier_options[q_key] = f"{q_display}{type_label}"
+
 rows = []
 for i in range(5):
     st.subheader(f"Row {i + 1}")
     
-    col1, col2, col3, col4 = st.columns(4)
+    # First row: Criteria type selection
+    col1, col2 = st.columns(2)
     
     with col1:
         criteria_type = st.selectbox(
             "Criteria Type",
-            options=["team", "division", "conference", "position"],
+            options=["team", "division", "conference", "position", "qualifier_only"],
+            format_func=lambda x: {
+                "team": "🏟️ Team",
+                "division": "📍 Division", 
+                "conference": "🏈 Conference",
+                "position": "👤 Position",
+                "qualifier_only": "📊 Qualifier Only (Any Team)"
+            }.get(x, x),
             key=f"criteria_type_{i}"
         )
     
     with col2:
         if criteria_type == "team":
             team_options = {k: v['name'] for k, v in NFL_TEAMS.items()}
-            team = st.selectbox(
+            criteria_value = st.selectbox(
                 "Team",
                 options=list(team_options.keys()),
                 format_func=lambda x: team_options[x],
                 key=f"team_{i}"
             )
-            criteria_value = team
         elif criteria_type == "division":
             criteria_value = st.selectbox(
                 "Division",
@@ -94,6 +113,12 @@ for i in range(5):
                 options=stat_info['eligible_positions'],
                 key=f"position_{i}"
             )
+        else:
+            criteria_value = None
+            st.info("Qualifier-only row (no team restriction)")
+    
+    # Second row: Year range and qualifier
+    col3, col4, col5 = st.columns(3)
     
     with col3:
         year_start = st.number_input(
@@ -113,6 +138,14 @@ for i in range(5):
             key=f"year_end_{i}"
         )
     
+    with col5:
+        selected_qualifier = st.selectbox(
+            "Qualifier",
+            options=list(qualifier_options.keys()),
+            format_func=lambda x: qualifier_options[x],
+            key=f"qualifier_{i}"
+        )
+    
     # Build row criteria
     row_criteria = {
         'team': None,
@@ -123,6 +156,7 @@ for i in range(5):
         'conference': None,
         'qualifier': None,
         'qualifier_type': None,
+        'qualifier_display': None,
     }
     
     if criteria_type == "team":
@@ -134,7 +168,16 @@ for i in range(5):
     elif criteria_type == "position":
         row_criteria['position'] = criteria_value
     
+    # Add qualifier if selected
+    if selected_qualifier != "none":
+        q_info = STAT_QUALIFIERS.get(selected_qualifier, {})
+        row_criteria['qualifier'] = selected_qualifier
+        row_criteria['qualifier_type'] = q_info.get('qualifier_type', 'same_season')
+        row_criteria['qualifier_display'] = q_info.get('display', selected_qualifier)
+    
     rows.append(row_criteria)
+    
+    st.markdown("---")
 
 # Preview
 st.header("4. Preview Puzzle")
