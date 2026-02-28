@@ -573,10 +573,16 @@ def render_completed_row(row_index: int, submission: dict, score_data: dict, cri
         player_name = submission.get('player', 'Unknown') if submission else 'Unknown'
         season = submission.get('season', '') if submission else ''
         team = submission.get('team', 'N/A') if submission else 'N/A'
-        headshot_url = submission.get('headshot_url') if submission else None
+        espn_id = submission.get('espn_id') if submission else None
+        nfl_headshot_url = submission.get('headshot_url') if submission else None
         
-        # Fallback headshot if none available
-        if not headshot_url:
+        # Prefer ESPN headshots (better coverage for retired players)
+        # Fall back to NFL.com, then to placeholder
+        if espn_id:
+            headshot_url = f"https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{espn_id}.png&w=350&h=254"
+        elif nfl_headshot_url:
+            headshot_url = nfl_headshot_url
+        else:
             headshot_url = "https://a.espncdn.com/combiner/i?img=/i/headshots/nophoto.png&w=350&h=254"
         
         # Get criteria display text
