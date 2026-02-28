@@ -42,38 +42,54 @@ st.set_page_config(
 def load_custom_css():
     st.markdown("""
     <style>
-    /* Dark theme base */
+    /* Import modern font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    /* Modern dark theme base - charcoal grey like original StatPad */
     .stApp {
-        background-color: #1a1a2e;
+        background-color: #2d2d2d !important;
         color: #ffffff;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     
-    /* Header styling */
+    /* Override Streamlit's default background */
+    .main .block-container {
+        background-color: #2d2d2d !important;
+        padding: 1rem 1rem 2rem 1rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* Header styling - modern and compact */
     .game-header {
         text-align: center;
-        padding: 15px 0;
-        border-bottom: 2px solid #333;
-        margin-bottom: 15px;
+        padding: 12px 0;
+        margin-bottom: 12px;
     }
     
     .game-title {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #f39c12;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
         margin: 0;
+        letter-spacing: -0.5px;
     }
     
-    /* Stats header - responsive */
+    .game-title-accent {
+        color: #f39c12;
+    }
+    
+    /* Stats header - responsive with modern styling */
     .stats-header {
         display: flex;
         justify-content: space-around;
         align-items: center;
-        padding: 15px;
-        background: #16213e;
-        border-radius: 10px;
-        margin-bottom: 15px;
+        padding: 16px;
+        background: #3a3a3a;
+        border-radius: 12px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
     .stat-box {
@@ -106,25 +122,27 @@ def load_custom_css():
     
     /* Game row - mobile responsive */
     .game-row {
-        background: #16213e;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 8px;
+        background: #3a3a3a;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
     .game-row-content {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
     }
     
     /* Mobile-friendly row card */
     .row-card {
-        background: #16213e;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 10px;
+        background: #3a3a3a;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
     .row-header {
@@ -360,6 +378,94 @@ def load_custom_css():
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
+    /* Modern Streamlit button styling - touch friendly */
+    .stButton > button {
+        background-color: #4ade80 !important;
+        color: #000 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 20px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        min-height: 48px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .stButton > button:hover {
+        background-color: #22c55e !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0) !important;
+    }
+    
+    /* Primary button variant */
+    .stButton > button[kind="primary"] {
+        background-color: #4ade80 !important;
+    }
+    
+    /* Secondary/default buttons */
+    .stButton > button[kind="secondary"],
+    .stButton > button:not([kind="primary"]) {
+        background-color: #4a4a4a !important;
+        color: #fff !important;
+    }
+    
+    .stButton > button[kind="secondary"]:hover,
+    .stButton > button:not([kind="primary"]):hover {
+        background-color: #5a5a5a !important;
+    }
+    
+    /* Selectbox styling */
+    .stSelectbox > div > div {
+        background-color: #3a3a3a !important;
+        border: 1px solid #555 !important;
+        border-radius: 10px !important;
+        min-height: 48px !important;
+    }
+    
+    .stSelectbox [data-baseweb="select"] {
+        background-color: #3a3a3a !important;
+    }
+    
+    /* Number input styling */
+    .stNumberInput > div > div > input {
+        background-color: #3a3a3a !important;
+        border: 1px solid #555 !important;
+        border-radius: 10px !important;
+        color: #fff !important;
+        min-height: 48px !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Checkbox styling */
+    .stCheckbox > label {
+        color: #fff !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background-color: #3a3a3a !important;
+        border-radius: 8px !important;
+        color: #fff !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .streamlit-expanderContent {
+        background-color: #333 !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+    
+    /* Divider styling */
+    hr {
+        border-color: #444 !important;
+        margin: 12px 0 !important;
+    }
+    
     /* Mobile-specific styles */
     @media (max-width: 768px) {
         .game-title {
@@ -471,9 +577,9 @@ def render_header():
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        st.markdown(f"""
+        st.markdown("""
         <div class="game-header" style="border-bottom: none; padding-bottom: 0;">
-            <h1 class="game-title">🏈 {GAME_NAME}</h1>
+            <h1 class="game-title"><span class="game-title-accent">StatPad</span> - NFL 🏈</h1>
         </div>
         """, unsafe_allow_html=True)
     
