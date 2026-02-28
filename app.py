@@ -1308,14 +1308,8 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
     """Show centered dialog for player selection"""
     st.markdown("**Select a player to submit**")
     
-    # Initialize error state for this dialog
-    error_key = f"dialog_error_{row_index}"
-    if error_key not in st.session_state:
-        st.session_state[error_key] = None
-    
-    # Show any existing error message at the top
-    if st.session_state[error_key]:
-        st.error(st.session_state[error_key])
+    # Create a placeholder for error messages at the top
+    error_placeholder = st.empty()
     
     # Player search/select
     player_input = st.selectbox(
@@ -1343,23 +1337,17 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
     with col1:
         if st.button("Submit", key=f"dialog_submit_{row_index}", type="primary", use_container_width=True):
             if player_input:
-                # Clear previous error
-                st.session_state[error_key] = None
-                
                 # Try to submit and capture any error
                 success, error_msg = submit_player_with_feedback(row_index, player_input, year_input)
                 
                 if success:
-                    # Clear error and close dialog
-                    st.session_state[error_key] = None
+                    # Close dialog and refresh
                     st.rerun()
                 else:
-                    # Store error and rerun to show it in the dialog
-                    st.session_state[error_key] = error_msg
-                    st.rerun()
+                    # Show error in the placeholder (dialog stays open)
+                    error_placeholder.error(error_msg)
             else:
-                st.session_state[error_key] = "Please select a player"
-                st.rerun()
+                error_placeholder.error("Please select a player")
 
 
 def render_input_row(row_index: int, criteria: dict, logo_info: dict, year_start: int, year_end: int, qualifier_display: str):
