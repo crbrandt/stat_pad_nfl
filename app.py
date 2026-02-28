@@ -1019,11 +1019,14 @@ def render_header():
 
 
 def render_easy_mode_toggle():
-    """Render the Easy Mode toggle centered above the game rows"""
-    # Center the checkbox using columns
+    """Render the Easy Mode toggle as a centered on/off switch beneath the stats header"""
+    # Use st.toggle for on/off switch appearance, centered with HTML wrapper
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        easy_mode = st.checkbox("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
+        # Center the toggle using a container
+        st.markdown('<div style="display: flex; justify-content: center; margin: 10px 0;">', unsafe_allow_html=True)
+        easy_mode = st.toggle("Easy Mode", value=st.session_state.easy_mode, key="easy_mode_toggle")
+        st.markdown('</div>', unsafe_allow_html=True)
         if easy_mode != st.session_state.easy_mode:
             st.session_state.easy_mode = easy_mode
             st.rerun()
@@ -1692,11 +1695,10 @@ def main():
     init_session_state()
     
     render_header()
-    
-    # Easy Mode toggle centered beneath the title
-    render_easy_mode_toggle()
-    
     render_stats_header()
+    
+    # Easy Mode toggle centered beneath the stats header
+    render_easy_mode_toggle()
     
     st.markdown("---")
     
