@@ -1575,20 +1575,17 @@ def submit_player(row_index: int, player_name: str, year: int = None):
 
 
 def render_footer():
-    """Render footer with How to Play and FAQ buttons"""
+    """Render footer with How to Play and FAQ buttons - stacked vertically for mobile"""
     st.markdown("---")
     
-    col1, col2 = st.columns(2)
+    # Render buttons stacked vertically (full width) for better mobile compatibility
+    if st.button("❓ How to Play", use_container_width=True, key="footer_how_to_play"):
+        st.session_state.show_how_to_play = True
+        st.session_state.show_faq = False
     
-    with col1:
-        if st.button("❓ How to Play", use_container_width=True):
-            st.session_state.show_how_to_play = True
-            st.session_state.show_faq = False
-    
-    with col2:
-        if st.button("📊 FAQ", use_container_width=True):
-            st.session_state.show_faq = True
-            st.session_state.show_how_to_play = False
+    if st.button("📊 FAQ", use_container_width=True, key="footer_faq"):
+        st.session_state.show_faq = True
+        st.session_state.show_how_to_play = False
     
     # Attribution footer
     st.markdown("""
