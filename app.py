@@ -1344,8 +1344,9 @@ def show_player_dialog(row_index: int, criteria: dict, filtered_players: list, y
                     # Close dialog and refresh
                     st.rerun()
                 else:
-                    # Show error in the placeholder (dialog stays open)
-                    error_placeholder.error(error_msg)
+                    # Show error in the placeholder with guess count info (dialog stays open)
+                    # The guess count was already incremented in submit_player_with_feedback
+                    error_placeholder.error(f"{error_msg}\n\n_(Guess #{st.session_state.total_guesses} counted)_")
             else:
                 error_placeholder.error("Please select a player")
 
